@@ -12,12 +12,23 @@
     --accent: #303c6c;
     --accent-ink: #ffffff;
     --accent-soft: #e1e6f2;
-    --high: #c9504a;
+
+    /* Heritage Collection palette — used at full strength for swatches and
+       chips; *-text variants are darkened/lightened per-theme for AA text
+       contrast, *-soft variants are pale tints for backgrounds. */
+    --high: #ff8882;
+    --high-text: #c9504a;
     --high-soft: #ffe4e1;
-    --med: #a67a1f;
+    --med: #ffd881;
+    --med-text: #a67a1f;
     --med-soft: #fff3d9;
-    --low: #3f7c62;
+    --low: #a3d3bf;
+    --low-text: #3f7c62;
     --low-soft: #e3f2ec;
+    --info: #b4d5db;
+    --info-soft: #fff5d2;
+    --chip-ink: #26314f;
+
     --done: #8891ab;
     --shadow: 0 1px 2px rgba(48,60,108,.08), 0 4px 14px rgba(48,60,108,.08);
   }
@@ -33,12 +44,20 @@
       --accent: #b4d5db;
       --accent-ink: #12162a;
       --accent-soft: #24344a;
-      --high: #ff9d97;
+
+      --high: #ff8882;
+      --high-text: #ff9d97;
       --high-soft: #3a2422;
       --med: #ffd881;
+      --med-text: #ffd881;
       --med-soft: #3a3020;
       --low: #a3d3bf;
+      --low-text: #a3d3bf;
       --low-soft: #1e2f28;
+      --info: #b4d5db;
+      --info-soft: #3a3420;
+      --chip-ink: #26314f;
+
       --done: #7c85a3;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
     }
@@ -54,12 +73,20 @@
     --accent: #b4d5db;
     --accent-ink: #12162a;
     --accent-soft: #24344a;
-    --high: #ff9d97;
+
+    --high: #ff8882;
+    --high-text: #ff9d97;
     --high-soft: #3a2422;
     --med: #ffd881;
+    --med-text: #ffd881;
     --med-soft: #3a3020;
     --low: #a3d3bf;
+    --low-text: #a3d3bf;
     --low-soft: #1e2f28;
+    --info: #b4d5db;
+    --info-soft: #3a3420;
+    --chip-ink: #26314f;
+
     --done: #7c85a3;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
   }
@@ -113,7 +140,7 @@
   }
   .mgr-chip:hover{ border-color: var(--accent); }
   .mgr-dot{ width:8px; height:8px; border-radius:50%; background: var(--accent); flex:none; }
-  .mgr-meta .mgr-name{ font-weight:600; font-size:13px; }
+  .mgr-meta .mgr-name{ font-weight:600; font-size:16px; }
 
   .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   button.btn, .btn-icon, .checkbox{ touch-action: manipulation; }
@@ -146,8 +173,8 @@
   .banner li .tag{
     font-family:"IBM Plex Mono", monospace; font-size:11px; padding:1px 6px; border-radius:5px;
   }
-  .banner li .tag.overdue{ background: var(--high-soft); color: var(--high); }
-  .banner li .tag.soon{ background: var(--med-soft); color: var(--med); }
+  .banner li .tag.overdue{ background: var(--high-soft); color: var(--high-text); }
+  .banner li .tag.soon{ background: var(--med-soft); color: var(--med-text); }
   .banner li b{ color: var(--ink); font-weight:600; }
 
   /* ---------- board ---------- */
@@ -173,10 +200,13 @@
   }
 
   .card{
-    background: var(--surface); border:1px solid var(--border); border-radius:11px;
+    background: var(--surface); border:1px solid var(--border); border-left:3px solid transparent; border-radius:11px;
     padding:13px 14px; box-shadow: var(--shadow); display:flex; flex-direction:column; gap:9px;
   }
-  .card.done{ opacity:.6; }
+  .col.high .card{ border-left-color: var(--high); }
+  .col.med .card{ border-left-color: var(--med); }
+  .col.low .card{ border-left-color: var(--low); }
+  .card.done{ opacity:.6; border-left-color: var(--border); }
   .card .row1{ display:flex; align-items:flex-start; gap:9px; }
   .checkbox{
     width:18px; height:18px; border-radius:5px; border:1.5px solid var(--ink-faint);
@@ -194,14 +224,14 @@
     display:inline-flex; align-items:center; gap:4px; font-variant-numeric: tabular-nums;
   }
   .pill.deadline{ background: var(--surface-2); color: var(--ink-soft); }
-  .pill.deadline.overdue{ background: var(--high-soft); color: var(--high); }
-  .pill.deadline.soon{ background: var(--med-soft); color: var(--med); }
-  .pill.recurring{ background: var(--accent-soft); color: var(--accent); }
+  .pill.deadline.overdue{ background: var(--high-soft); color: var(--high-text); }
+  .pill.deadline.soon{ background: var(--med-soft); color: var(--med-text); }
+  .pill.recurring{ background: var(--info-soft); color: var(--accent); font-weight:600; }
   .pill.manager{ background: var(--surface-2); color: var(--ink-soft); }
-  .pill.pri-high{ background: var(--high-soft); color: var(--high); }
-  .pill.pri-medium{ background: var(--med-soft); color: var(--med); }
-  .pill.pri-low{ background: var(--low-soft); color: var(--low); }
-  .pill.status-done{ background: var(--low-soft); color: var(--low); }
+  .pill.pri-high{ background: var(--high); color: var(--chip-ink); font-weight:600; }
+  .pill.pri-medium{ background: var(--med); color: var(--chip-ink); font-weight:600; }
+  .pill.pri-low{ background: var(--low); color: var(--chip-ink); font-weight:600; }
+  .pill.status-done{ background: var(--low-soft); color: var(--low-text); }
   .pill.status-open{ background: var(--surface-2); color: var(--ink-soft); }
 
   .mgr-table{ width:100%; border-collapse:collapse; font-size:13px; }
@@ -229,10 +259,11 @@
     padding:20px; z-index:50;
   }
   .modal{
+    position: relative;
     background: var(--surface); border-radius:14px; width:100%; max-width:460px; box-shadow: var(--shadow);
     padding:22px; display:flex; flex-direction:column; gap:14px; max-height: 88vh; overflow:auto;
   }
-  .modal h3{ margin:0; font-family:"Fraunces", serif; font-size:19px; font-weight:600; }
+  .modal h3{ margin:0; padding-right:32px; font-family:"Fraunces", serif; font-size:19px; font-weight:600; }
   .field{ display:flex; flex-direction:column; gap:5px; }
   .field label{ font-size:12px; font-weight:600; color: var(--ink-soft); }
   .field input, .field select, .field textarea{
@@ -248,7 +279,10 @@
     position: sticky; bottom: -22px; background: var(--surface);
     margin-left:-22px; margin-right:-22px; padding:12px 22px 22px; border-top:1px solid var(--border);
   }
-  .modal-close{ align-self:flex-end; margin-top:-30px; }
+  .modal-close{
+    position: absolute; top:14px; right:14px; z-index:1;
+    width:28px; height:28px; display:flex; align-items:center; justify-content:center; padding:0;
+  }
 
   .settings-grid{ display:flex; flex-direction:column; gap:12px; }
   .settings-mgr{ border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
@@ -319,7 +353,7 @@
     <div style="overflow:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--shadow);">
       <table class="mgr-table">
         <thead>
-          <tr><th>#</th><th>Date assigned</th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Excel</th><th>Manager notes</th><th></th></tr>
+          <tr><th>#</th><th>Date assigned</th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Document link</th><th>Manager notes</th><th></th></tr>
         </thead>
         <tbody id="mgrPageBody"></tbody>
       </table>
@@ -366,15 +400,15 @@
       </div>
     </div>
     <div class="field">
-      <label>Excel file link</label>
-      <input id="f-excel" placeholder="https://...xlsx or SharePoint/Drive link">
+      <label>Document link</label>
+      <input id="f-excel" placeholder="https://... Excel, SharePoint, or Drive link">
     </div>
     <div class="field">
       <label>Manager notes</label>
       <textarea id="f-notes" rows="3" placeholder="Notes from the assigned manager (instructions, feedback, status updates)…"></textarea>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-ghost" id="deleteTaskBtn" style="display:none; margin-right:auto; color:var(--high);">Delete task</button>
+      <button type="button" class="btn btn-ghost" id="deleteTaskBtn" style="display:none; margin-right:auto; color:var(--high-text);">Delete task</button>
       <button type="button" class="btn btn-ghost" id="taskCancelBtn">Cancel</button>
       <button type="button" class="btn btn-primary" id="taskSaveBtn">Save task</button>
     </div>
@@ -625,7 +659,7 @@
       '<span class="pill deadline ' + deadlineClass + '">Deadline: ' + fmtDate(t.deadline) + '</span>' +
       (mgr ? '<span class="pill manager">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
       (t.recurring !== "none" ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
-      (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Excel file</a>' : '');
+      (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Document</a>' : '');
     card.appendChild(meta);
 
     if(t.notes){
@@ -668,7 +702,7 @@
         "Task: " + t.title,
         "Priority: " + t.priority,
         "Deadline: " + fmtDate(t.deadline),
-        t.excelLink ? "Excel file: " + t.excelLink : "",
+        t.excelLink ? "Document: " + t.excelLink : "",
         t.notes ? "Notes: " + t.notes : "",
         "Completed: " + new Date(t.completedAt).toLocaleString(),
         "",
@@ -736,7 +770,7 @@
         "Task: " + t.title,
         "Priority: " + t.priority,
         "Deadline: " + fmtDate(t.deadline),
-        t.excelLink ? "Excel file: " + t.excelLink : "",
+        t.excelLink ? "Document: " + t.excelLink : "",
         reason ? "Reason: " + reason : "",
         "",
         "Thank you",
