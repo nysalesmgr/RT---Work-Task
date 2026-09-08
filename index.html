@@ -682,13 +682,24 @@
   }
 
   var MANAGER_COLOR_PALETTE = ["pink", "purple", "blue", "orange"];
-  var MANAGER_COLOR_BY_ID = { m1: "pink", m2: "purple", m3: "blue" };
+  // Keyed by manager NAME (normalised), not id or list position — Supabase doesn't
+  // guarantee row order or id format, so keying off those made the colours drift
+  // between loads. Name is the one thing that stays stable and matches what's shown.
+  var MANAGER_COLOR_BY_NAME = { "jonia": "pink", "pk": "purple", "karenatiqah": "blue" };
+  function normalizeManagerKey(s){ return (s || "").toLowerCase().replace(/[^a-z0-9]/g, ""); }
+  function stringHash(s){
+    var h = 0;
+    for(var i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) >>> 0; }
+    return h;
+  }
   function managerColorKey(mgr){
     if(!mgr) return "";
-    if(MANAGER_COLOR_BY_ID[mgr.id]) return MANAGER_COLOR_BY_ID[mgr.id];
-    var idx = state.config.managers.indexOf(mgr);
-    if(idx < 0) idx = 0;
-    return MANAGER_COLOR_PALETTE[idx % MANAGER_COLOR_PALETTE.length];
+    var nameKey = normalizeManagerKey(mgr.name);
+    if(MANAGER_COLOR_BY_NAME[nameKey]) return MANAGER_COLOR_BY_NAME[nameKey];
+    // Unknown manager (e.g. newly added in settings): assign a colour deterministically
+    // from their name/id so it's always the same colour for them, regardless of order.
+    var hashKey = nameKey || normalizeManagerKey(mgr.id) || "manager";
+    return MANAGER_COLOR_PALETTE[stringHash(hashKey) % MANAGER_COLOR_PALETTE.length];
   }
   function managerColorClass(mgr){
     var k = managerColorKey(mgr);
