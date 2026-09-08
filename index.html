@@ -1,5 +1,6 @@
 <title>Rhea's Workload Overview</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
   :root{
     --bg: #f3f5fa;
@@ -440,6 +441,34 @@
   </div>
 </div>
 
+<div id="emailPreviewOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:520px;">
+    <button type="button" class="btn-icon modal-close" id="emailPreviewClose">✕</button>
+    <h3>Notification email</h3>
+    <p style="margin:-6px 0 0; font-size:12.5px; color:var(--ink-soft);">
+      This email couldn't be sent automatically. Copy this and paste it into your email, or try "Open in mail app" if you have one set up on this device.
+    </p>
+    <div class="field">
+      <label>To</label>
+      <input id="emailPreviewTo" readonly>
+    </div>
+    <div class="field">
+      <label>Subject</label>
+      <input id="emailPreviewSubject" readonly>
+    </div>
+    <div class="field">
+      <label>Body</label>
+      <textarea id="emailPreviewBody" rows="10" readonly></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="emailPreviewCopy">Copy email text</button>
+      <a class="btn btn-primary" id="emailPreviewOpenMail" href="#" style="text-decoration:none;">Open in mail app</a>
+    </div>
+  </div>
+</div>
+
+<div id="emailToast" style="display:none; position:fixed; left:50%; bottom:28px; transform:translateX(-50%); background:var(--ink, #26314f); color:#fff; padding:10px 18px; border-radius:10px; font-size:13.5px; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.22); z-index:9999;"></div>
+
 <script>
 (function(){
   "use strict";
@@ -459,6 +488,21 @@
   var SUPABASE_URL = "https://ystdudyvcafgnpnvpjqg.supabase.co";
   var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzdGR1ZHl2Y2FmZ25wbnZwanFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4MzIyNDUsImV4cCI6MjEwNDQwODI0NX0.gyqMuLFrkwHVUtgc3UPX3WWiVNenkeQwyLMJkNTVAEI";
   var SUPABASE_POLL_MS = 5000;
+
+  // EmailJS — sends real automatic notification emails from nyenquiry@hericoll.com.
+  // Works on the GitHub Pages copy (open network access). Inside a Claude artifact the
+  // sandbox blocks calls to outside services, so it silently falls back to the
+  // copy/paste preview modal there.
+  var EMAILJS_SERVICE_ID = "service_r5h5l4b";
+  var EMAILJS_TEMPLATE_ID = "template_0j31x7k";
+  var EMAILJS_PUBLIC_KEY = "dMOND7T2r_Wl3xT0a";
+  var emailjsReady = false;
+  try{
+    if(window.emailjs && EMAILJS_PUBLIC_KEY){
+      window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+      emailjsReady = true;
+    }
+  }catch(e){ emailjsReady = false; }
 
   function isoInDays(n){
     var d = new Date();
@@ -680,6 +724,90 @@
   }
   function escapeAttr(s){ return escapeHtml(s); }
 
+  // ---------- notifications ----------
+  // Tries to send a real email via EmailJS (works on GitHub Pages). If EmailJS isn't
+  // available/reachable (e.g. inside the sandboxed Claude artifact, or offline), falls
+  // back to the copy/paste preview modal so the notification is never silently lost.
+  function sendNotification(opts){
+    var to = opts.to || "";
+    var subject = opts.subject || "";
+    var body = opts.body || "";
+    if(emailjsReady && to){
+      var recipients = to.split(",").map(function(e){ return e.trim(); }).filter(Boolean).join(",");
+      window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email: recipients,
+        subject: subject,
+        message: body
+      }).then(function(){
+        showEmailToast("Email sent to " + recipients);
+      }, function(){
+        showEmailPreview(opts);
+      });
+    } else {
+      showEmailPreview(opts);
+    }
+  }
+  function showEmailToast(text){
+    var el = document.getElementById("emailToast");
+    if(!el) return;
+    el.textContent = text;
+    el.style.display = "block";
+    clearTimeout(showEmailToast._t);
+    showEmailToast._t = setTimeout(function(){ el.style.display = "none"; }, 4000);
+  }
+
+  // ---------- email preview / fallback ----------
+  function showEmailPreview(opts){
+    var to = opts.to || "";
+    var subject = opts.subject || "";
+    var body = opts.body || "";
+    document.getElementById("emailPreviewTo").value = to;
+    document.getElementById("emailPreviewSubject").value = subject;
+    document.getElementById("emailPreviewBody").value = body;
+    var mailto = "mailto:" + to.split(",").map(function(e){ return e.trim(); }).filter(Boolean).join(",") +
+      "?subject=" + encodeURIComponent(subject) +
+      "&body=" + encodeURIComponent(body);
+    document.getElementById("emailPreviewOpenMail").href = mailto;
+    document.getElementById("emailPreviewOverlay").style.display = "flex";
+  }
+  function closeEmailPreview(){
+    document.getElementById("emailPreviewOverlay").style.display = "none";
+  }
+  function copyEmailPreview(){
+    var to = document.getElementById("emailPreviewTo").value;
+    var subject = document.getElementById("emailPreviewSubject").value;
+    var body = document.getElementById("emailPreviewBody").value;
+    var text = "To: " + to + "\nSubject: " + subject + "\n\n" + body;
+    var btn = document.getElementById("emailPreviewCopy");
+    function done(ok){
+      if(!btn) return;
+      var orig = "Copy email text";
+      btn.textContent = ok ? "Copied!" : "Couldn't copy — select & copy manually";
+      setTimeout(function(){ btn.textContent = orig; }, 1800);
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ fallbackCopy(); });
+    } else {
+      fallbackCopy();
+    }
+    function fallbackCopy(){
+      try{
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        done(ok);
+      }catch(e){
+        done(false);
+      }
+    }
+  }
+
   // ---------- actions ----------
   function toggleComplete(t){
     if(t.status === "done"){
@@ -711,11 +839,7 @@
         "Regards,",
         state.config.staffName
       ].filter(Boolean);
-      var recipients = mgr.email.split(",").map(function(e){ return e.trim(); }).filter(Boolean).join(",");
-      var mailto = "mailto:" + recipients +
-        "?subject=" + encodeURIComponent(subject) +
-        "&body=" + encodeURIComponent(bodyLines.join("\n"));
-      window.open(mailto, "_blank");
+      sendNotification({ to: mgr.email, subject: subject, body: bodyLines.join("\n") });
     }
 
     if(t.recurring && t.recurring !== "none"){
@@ -778,10 +902,7 @@
         "Regards,",
         mgr ? mgr.name : "Manager"
       ].filter(Boolean);
-      var mailto = "mailto:" + encodeURIComponent(state.config.staffEmail).replace(/%40/g, "@") +
-        "?subject=" + encodeURIComponent(subject) +
-        "&body=" + encodeURIComponent(bodyLines.join("\n"));
-      window.open(mailto, "_blank");
+      sendNotification({ to: state.config.staffEmail, subject: subject, body: bodyLines.join("\n") });
     }
 
     closeThrowback();
@@ -1021,6 +1142,12 @@
   document.getElementById("throwbackConfirm").addEventListener("click", confirmThrowback);
   document.getElementById("throwbackOverlay").addEventListener("click", function(e){
     if(e.target === document.getElementById("throwbackOverlay")) closeThrowback();
+  });
+
+  document.getElementById("emailPreviewClose").addEventListener("click", closeEmailPreview);
+  document.getElementById("emailPreviewCopy").addEventListener("click", copyEmailPreview);
+  document.getElementById("emailPreviewOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("emailPreviewOverlay")) closeEmailPreview();
   });
 
   window.addEventListener("popstate", function(){
