@@ -218,6 +218,7 @@
   .card .title{ font-weight:600; font-size:14px; flex:1; }
   .card.done .title{ text-decoration: line-through; color: var(--ink-faint); }
   .card .cardmenu{ display:flex; gap:2px; }
+  .card .cardmenu-always{ display:flex; gap:2px; }
 
   .meta-row{ display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; }
   .pill{
@@ -441,6 +442,14 @@
   </div>
 </div>
 
+<div id="historyOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:440px;">
+    <button type="button" class="btn-icon modal-close" id="historyClose">✕</button>
+    <h3 id="historyModalTitle" style="padding-right:32px;">Task history</h3>
+    <div id="historyModalBody" style="margin-top:6px; max-height:340px; overflow-y:auto;"></div>
+  </div>
+</div>
+
 <div id="emailPreviewOverlay" class="overlay" style="display:none;">
   <div class="modal" style="max-width:520px;">
     <button type="button" class="btn-icon modal-close" id="emailPreviewClose">✕</button>
@@ -474,7 +483,7 @@
   "use strict";
 
   var DEFAULT_STATE = {
-    staffName: "Staff member",
+    staffName: "Rhea Tan",
     staffEmail: "",
     managers: [
       { id:"m1", name:"Jonia", region:"New York",   tz:"America/New_York", email:"nysalesmgr@hericoll.com" },
@@ -639,6 +648,9 @@
         return true;
       }).sort(function(a,b){
         if(a.status !== b.status) return a.status === "done" ? 1 : -1;
+        var aDaily = a.recurring === "daily" ? 0 : 1;
+        var bDaily = b.recurring === "daily" ? 0 : 1;
+        if(aDaily !== bDaily) return aDaily - bDaily;
         if(!a.deadline && !b.deadline) return 0;
         if(!a.deadline) return 1;
         if(!b.deadline) return -1;
@@ -681,6 +693,14 @@
     title.className = "title";
     title.textContent = t.title;
     row1.appendChild(title);
+
+    var alwaysMenu = document.createElement("div");
+    alwaysMenu.className = "cardmenu-always";
+    var histBtn = document.createElement("button");
+    histBtn.className = "btn-icon"; histBtn.textContent = "🕘"; histBtn.title = "View history";
+    histBtn.addEventListener("click", function(){ openHistory(t); });
+    alwaysMenu.appendChild(histBtn);
+    row1.appendChild(alwaysMenu);
 
     var menu = document.createElement("div");
     menu.className = "cardmenu";
@@ -808,11 +828,56 @@
     }
   }
 
+  // ---------- history ----------
+  function pushHistory(t, entry){
+    if(!Array.isArray(t.history)) t.history = [];
+    entry.at = entry.at || nowIso();
+    t.history.push(entry);
+  }
+  function historyEventLabel(ev){
+    if(ev.type === "created") return "Assigned";
+    if(ev.type === "completed") return "Completed";
+    if(ev.type === "sent_back") return "Sent back" + (ev.by ? " by " + ev.by : "") + (ev.reason ? ": " + ev.reason : "");
+    if(ev.type === "reopened") return "Reopened";
+    return ev.type;
+  }
+  function historyIcon(ev){
+    if(ev.type === "created") return "＋";
+    if(ev.type === "completed") return "✅";
+    if(ev.type === "sent_back") return "⤺";
+    if(ev.type === "reopened") return "↺";
+    return "•";
+  }
+  function renderHistoryList(t){
+    var events = Array.isArray(t.history) ? t.history : [];
+    if(!events.length) return '<p style="color:var(--ink-faint); font-size:13px; margin:0;">No history yet.</p>';
+    return '<ul style="list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;">' +
+      events.map(function(ev){
+        return '<li style="display:flex; gap:8px; align-items:flex-start; font-size:13.5px;">' +
+          '<span style="flex:0 0 auto;">' + historyIcon(ev) + '</span>' +
+          '<span><strong>' + escapeHtml(historyEventLabel(ev)) + '</strong><br>' +
+          '<span style="color:var(--ink-faint); font-size:12px;">' + fmtAssignedDate(ev.at) + '</span></span>' +
+        '</li>';
+      }).join("") + '</ul>';
+  }
+  var historyTaskId = null;
+  function openHistory(t){
+    historyTaskId = t.id;
+    document.getElementById("historyModalTitle").textContent = t.title;
+    document.getElementById("historyModalBody").innerHTML = renderHistoryList(t);
+    document.getElementById("historyOverlay").style.display = "flex";
+  }
+  function closeHistory(){
+    document.getElementById("historyOverlay").style.display = "none";
+    historyTaskId = null;
+  }
+
   // ---------- actions ----------
   function toggleComplete(t){
     if(t.status === "done"){
       t.status = "open";
       t.completedAt = null;
+      pushHistory(t, { type:"reopened" });
       persistTask(t);
       render();
       return;
@@ -820,6 +885,7 @@
     var mgr = managerById(t.managerId);
     t.status = "done";
     t.completedAt = nowIso();
+    pushHistory(t, { type:"completed", at: t.completedAt });
 
     if(mgr && mgr.email){
       var subject = "Task completed: " + t.title;
@@ -843,6 +909,7 @@
     }
 
     if(t.recurring && t.recurring !== "none"){
+      var nextCreatedAt = nowIso();
       var next = {
         id: uid(),
         title: t.title,
@@ -852,7 +919,8 @@
         recurring: t.recurring,
         managerId: t.managerId,
         status: "open",
-        createdAt: nowIso()
+        createdAt: nextCreatedAt,
+        history: [{ type:"created", at: nextCreatedAt }]
       };
       state.tasks.push(next);
       persistTask(next);
@@ -880,9 +948,7 @@
 
     t.status = "open";
     t.completedAt = null;
-    if(reason){
-      t.notes = (t.notes ? t.notes + "\n\n" : "") + "⤺ Sent back " + fmtAssignedDate(nowIso()) + (mgr ? " by " + mgr.name : "") + ": " + reason;
-    }
+    pushHistory(t, { type:"sent_back", by: mgr ? mgr.name : null, reason: reason || "" });
     persistTask(t);
 
     if(state.config.staffEmail){
@@ -1035,7 +1101,8 @@
         persistTask(existing);
       }
     } else {
-      var t = Object.assign({ id: uid(), status:"open", createdAt: nowIso() }, data);
+      var createdAt = nowIso();
+      var t = Object.assign({ id: uid(), status:"open", createdAt: createdAt, history: [{ type:"created", at: createdAt }] }, data);
       state.tasks.push(t);
       persistTask(t);
     }
@@ -1121,14 +1188,18 @@
         '<td>' + (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—') + '</td>' +
         '<td>' + (t.notes ? escapeHtml(t.notes) : '—') + '</td>';
       var actionTd = document.createElement("td");
+      actionTd.style.whiteSpace = "nowrap";
+      var histBtn = document.createElement("button");
+      histBtn.type = "button";
+      histBtn.className = "btn-icon"; histBtn.textContent = "🕘"; histBtn.title = "View history";
+      histBtn.addEventListener("click", function(){ openHistory(t); });
+      actionTd.appendChild(histBtn);
       if(t.status === "done" && !isStaff){
         var throwBtn = document.createElement("button");
         throwBtn.type = "button";
         throwBtn.className = "btn-icon"; throwBtn.textContent = "⤺"; throwBtn.title = "Send back for further refinement";
         throwBtn.addEventListener("click", function(){ openThrowback(t); });
         actionTd.appendChild(throwBtn);
-      } else {
-        actionTd.textContent = "—";
       }
       tr.appendChild(actionTd);
       body.appendChild(tr);
@@ -1142,6 +1213,11 @@
   document.getElementById("throwbackConfirm").addEventListener("click", confirmThrowback);
   document.getElementById("throwbackOverlay").addEventListener("click", function(e){
     if(e.target === document.getElementById("throwbackOverlay")) closeThrowback();
+  });
+
+  document.getElementById("historyClose").addEventListener("click", closeHistory);
+  document.getElementById("historyOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("historyOverlay")) closeHistory();
   });
 
   document.getElementById("emailPreviewClose").addEventListener("click", closeEmailPreview);
