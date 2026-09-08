@@ -338,11 +338,6 @@
         <div class="cards" id="cards-low"></div>
       </div>
     </div>
-
-    <footer class="note">
-      Marking a task complete opens a pre-filled email to the assigned manager from your own mail app — nothing is sent silently.
-      Recurring tasks automatically re-open with the next occurrence's deadline once completed. Everyone with this page open shares the same live board.
-    </footer>
   </div>
 
   <div id="mgrPageView" style="display:none;">
@@ -454,7 +449,7 @@
     staffEmail: "",
     managers: [
       { id:"m1", name:"Jonia", region:"New York",   tz:"America/New_York", email:"nysalesmgr@hericoll.com" },
-      { id:"m2", name:"PK",    region:"Xian", tz:"Asia/Shanghai",    email:"pk@yourcompany.com" },
+      { id:"m2", name:"PK",    region:"Xian", tz:"Asia/Shanghai",    email:"pkchan@columbiainv.com" },
       { id:"m3", name:"Karen/Atiqah", region:"SG-XHS", tz:"Asia/Singapore", email:"kchia@hericoll.com, sgenquiry@hericoll.com" }
     ]
   };
@@ -561,7 +556,7 @@
   function renderBanner(){
     var open = state.tasks.filter(function(t){ return t.status === "open"; });
     var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0; });
-    var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 2; });
+    var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 7; });
     var banner = document.getElementById("reminderBanner");
     var headline = document.getElementById("bannerHeadline");
     var list = document.getElementById("bannerList");
@@ -574,7 +569,7 @@
     banner.classList.toggle("has-overdue", overdue.length > 0);
     var parts = [];
     if(overdue.length) parts.push(overdue.length + " overdue");
-    if(soon.length) parts.push(soon.length + " due within 2 days");
+    if(soon.length) parts.push(soon.length + " due within 7 days");
     headline.textContent = "Reminder — " + parts.join(" · ");
 
     var items = overdue.concat(soon).slice(0, 8);
@@ -618,7 +613,7 @@
   function renderCard(t){
     var mgr = managerById(t.managerId);
     var d = daysUntil(t.deadline);
-    var deadlineClass = (t.status === "done" || d === null) ? "" : (d < 0 ? "overdue" : (d <= 2 ? "soon" : ""));
+    var deadlineClass = (t.status === "done" || d === null) ? "" : (d < 0 ? "overdue" : (d <= 7 ? "soon" : ""));
     var card = document.createElement("div");
     card.className = "card" + (t.status === "done" ? " done" : "");
 
