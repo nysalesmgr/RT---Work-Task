@@ -1,0 +1,844 @@
+<title>Task Relay</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg: #f2f4f7;
+    --surface: #ffffff;
+    --surface-2: #eaedf3;
+    --border: #d8dde6;
+    --ink: #1a2233;
+    --ink-soft: #5b6478;
+    --ink-faint: #8991a3;
+    --accent: #3454d1;
+    --accent-ink: #ffffff;
+    --accent-soft: #e8ecfc;
+    --high: #b3413c;
+    --high-soft: #fbe9e7;
+    --med: #b07a1f;
+    --med-soft: #fbf1de;
+    --low: #2f7d54;
+    --low-soft: #e6f4ec;
+    --done: #8991a3;
+    --shadow: 0 1px 2px rgba(26,34,51,.06), 0 4px 14px rgba(26,34,51,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14171f;
+      --surface: #1b1f2a;
+      --surface-2: #232837;
+      --border: #313648;
+      --ink: #e9ebf3;
+      --ink-soft: #a7aec2;
+      --ink-faint: #747c92;
+      --accent: #7c92f2;
+      --accent-ink: #12162a;
+      --accent-soft: #232c4d;
+      --high: #e08d84;
+      --high-soft: #3a2323;
+      --med: #e0b466;
+      --med-soft: #3a3120;
+      --low: #7bc79c;
+      --low-soft: #1f3227;
+      --done: #747c92;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14171f;
+    --surface: #1b1f2a;
+    --surface-2: #232837;
+    --border: #313648;
+    --ink: #e9ebf3;
+    --ink-soft: #a7aec2;
+    --ink-faint: #747c92;
+    --accent: #7c92f2;
+    --accent-ink: #12162a;
+    --accent-soft: #232c4d;
+    --high: #e08d84;
+    --high-soft: #3a2323;
+    --med: #e0b466;
+    --med-soft: #3a3120;
+    --low: #7bc79c;
+    --low-soft: #1f3227;
+    --done: #747c92;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+  }
+
+  *{ box-sizing: border-box; }
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, sans-serif;
+    line-height: 1.45;
+  }
+  .wrap{ max-width: 1240px; margin: 0 auto; padding: 28px 20px 80px; }
+
+  /* ---------- header ---------- */
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .brand{ display:flex; flex-direction:column; gap:4px; }
+  .brand .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; letter-spacing:.09em;
+    text-transform:uppercase; color: var(--ink-faint);
+  }
+  .brand h1{
+    font-family:"Fraunces", serif; font-weight:600; font-size:30px;
+    margin:0; text-wrap: balance; letter-spacing:-.01em;
+  }
+  .brand .staffline{
+    font-size:14px; color: var(--ink-soft);
+  }
+  .brand .staffline b{ color: var(--ink); font-weight:600; }
+  .brand .staffline input{
+    font: inherit; color: inherit; background:transparent; border:none; border-bottom:1px dashed var(--border);
+    padding:0 2px; width: 160px;
+  }
+  .brand .staffline input:focus{ outline:none; border-color: var(--accent); }
+
+  .managers{ display:flex; gap:10px; flex-wrap:wrap; }
+  .mgr-chip{
+    display:flex; align-items:center; gap:8px;
+    background: var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; box-shadow: var(--shadow); min-width:150px;
+  }
+  .mgr-dot{ width:8px; height:8px; border-radius:50%; background: var(--accent); flex:none; }
+  .mgr-meta .mgr-name{ font-weight:600; font-size:13px; }
+
+  .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  button.btn, .btn-icon, .checkbox{ touch-action: manipulation; }
+  button.btn{
+    font: inherit; font-weight:600; font-size:13.5px; cursor:pointer;
+    border-radius:9px; border:1px solid transparent; padding:9px 16px;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .btn-primary{ background: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover{ filter:brightness(1.05); }
+  .btn-ghost{ background: var(--surface); border-color: var(--border); color: var(--ink); }
+  .btn-ghost:hover{ background: var(--surface-2); }
+  .btn-icon{ background:none; border:none; color:var(--ink-faint); cursor:pointer; font-size:15px; padding:4px 6px; border-radius:6px; }
+  .btn-icon:hover{ background: var(--surface-2); color:var(--ink); }
+  .spacer{ flex:1; }
+  .synctag{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; color: var(--ink-faint);
+    display:flex; align-items:center; gap:6px;
+  }
+  .synctag .dot{ width:7px; height:7px; border-radius:50%; background: var(--low); }
+  .synctag.offline .dot{ background: var(--high); }
+
+  /* ---------- reminder banner ---------- */
+  .banner{
+    border-radius:12px; border:1px solid var(--border); background: var(--surface);
+    box-shadow: var(--shadow); padding:14px 18px; margin-bottom:20px;
+    display:flex; gap:14px; align-items:flex-start;
+  }
+  .banner.has-overdue{ border-color: color-mix(in srgb, var(--high) 40%, var(--border)); }
+  .banner .flag{ font-size:20px; line-height:1; margin-top:1px; }
+  .banner .body{ flex:1; }
+  .banner .headline{ font-weight:600; font-size:14px; margin-bottom:4px; }
+  .banner ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; }
+  .banner li{ font-size:13px; color: var(--ink-soft); display:flex; gap:8px; align-items:baseline; }
+  .banner li .tag{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; padding:1px 6px; border-radius:5px;
+  }
+  .banner li .tag.overdue{ background: var(--high-soft); color: var(--high); }
+  .banner li .tag.soon{ background: var(--med-soft); color: var(--med); }
+  .banner li b{ color: var(--ink); font-weight:600; }
+
+  /* ---------- board ---------- */
+  .board{ display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; align-items:start; }
+  @media (max-width: 880px){ .board{ grid-template-columns: 1fr; } }
+
+  .col{ display:flex; flex-direction:column; gap:12px; }
+  .col-head{ display:flex; align-items:center; gap:8px; padding:2px 4px; }
+  .col-head .swatch{ width:10px; height:10px; border-radius:3px; }
+  .col-head h2{ font-size:14px; font-weight:600; margin:0; }
+  .col-head .count{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; color: var(--ink-faint);
+    background: var(--surface-2); padding:1px 7px; border-radius:20px;
+  }
+  .col.high .swatch{ background: var(--high); }
+  .col.med .swatch{ background: var(--med); }
+  .col.low .swatch{ background: var(--low); }
+
+  .cards{ display:flex; flex-direction:column; gap:10px; min-height: 40px; }
+  .empty-col{
+    border:1.5px dashed var(--border); border-radius:10px; padding:16px; text-align:center;
+    font-size:12.5px; color: var(--ink-faint);
+  }
+
+  .card{
+    background: var(--surface); border:1px solid var(--border); border-radius:11px;
+    padding:13px 14px; box-shadow: var(--shadow); display:flex; flex-direction:column; gap:9px;
+  }
+  .card.done{ opacity:.6; }
+  .card .row1{ display:flex; align-items:flex-start; gap:9px; }
+  .checkbox{
+    width:18px; height:18px; border-radius:5px; border:1.5px solid var(--ink-faint);
+    flex:none; margin-top:1px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    background: var(--surface); font-size:12px; color: var(--accent-ink);
+  }
+  .checkbox.checked{ background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .card .title{ font-weight:600; font-size:14px; flex:1; }
+  .card.done .title{ text-decoration: line-through; color: var(--ink-faint); }
+  .card .cardmenu{ display:flex; gap:2px; }
+
+  .meta-row{ display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; }
+  .pill{
+    font-family:"IBM Plex Mono", monospace; font-size:11px; padding:2px 8px; border-radius:20px;
+    display:inline-flex; align-items:center; gap:4px; font-variant-numeric: tabular-nums;
+  }
+  .pill.deadline{ background: var(--surface-2); color: var(--ink-soft); }
+  .pill.deadline.overdue{ background: var(--high-soft); color: var(--high); }
+  .pill.deadline.soon{ background: var(--med-soft); color: var(--med); }
+  .pill.recurring{ background: var(--accent-soft); color: var(--accent); }
+  .pill.manager{ background: var(--surface-2); color: var(--ink-soft); }
+  a.xl-link{
+    font-size:12px; color: var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:5px;
+    border:1px solid var(--border); padding:3px 9px; border-radius:20px; background: var(--surface-2);
+  }
+  a.xl-link:hover{ text-decoration:underline; }
+  .card-notes{
+    font-size:12.5px; color: var(--ink-soft); background: var(--surface-2); border-radius:8px;
+    padding:8px 10px; white-space: pre-wrap; word-break: break-word;
+  }
+  .card-notes b{ color: var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background: rgba(20,23,31,.45); display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:50;
+  }
+  .modal{
+    background: var(--surface); border-radius:14px; width:100%; max-width:460px; box-shadow: var(--shadow);
+    padding:22px; display:flex; flex-direction:column; gap:14px; max-height: 88vh; overflow:auto;
+  }
+  .modal h3{ margin:0; font-family:"Fraunces", serif; font-size:19px; font-weight:600; }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:12px; font-weight:600; color: var(--ink-soft); }
+  .field input, .field select, .field textarea{
+    font: inherit; font-size:13.5px; padding:8px 10px; border-radius:8px; border:1px solid var(--border);
+    background: var(--surface); color: var(--ink);
+  }
+  .field textarea{ resize: vertical; font-family: inherit; }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline: 2px solid var(--accent); outline-offset:1px; }
+  .field-row{ display:flex; gap:10px; }
+  .field-row .field{ flex:1; }
+  .modal-actions{
+    display:flex; justify-content:flex-end; gap:8px; margin-top:6px;
+    position: sticky; bottom: -22px; background: var(--surface);
+    margin-left:-22px; margin-right:-22px; padding:12px 22px 22px; border-top:1px solid var(--border);
+  }
+  .modal-close{ align-self:flex-end; margin-top:-30px; }
+
+  .settings-grid{ display:flex; flex-direction:column; gap:12px; }
+  .settings-mgr{ border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+  .settings-mgr .field-row .field{ min-width:0; }
+
+  footer.note{
+    margin-top:28px; font-size:12px; color: var(--ink-faint); border-top:1px solid var(--border);
+    padding-top:14px; max-width: 640px;
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="eyebrow">Task Relay · Cross-region reporting</div>
+      <h1 id="staffHeading">Loading…</h1>
+      <div class="staffline">Staff member: <input id="staffNameInput" placeholder="Staff name"></div>
+    </div>
+    <div class="managers" id="managerChips"></div>
+  </header>
+
+  <div class="toolbar">
+    <button type="button" class="btn btn-primary" id="newTaskBtn">+ New task</button>
+    <button type="button" class="btn btn-ghost" id="settingsBtn">⚙ Managers &amp; settings</button>
+    <label class="btn-ghost btn" style="cursor:pointer; user-select:none;">
+      <input type="checkbox" id="showDoneToggle" style="margin-right:6px;">Show completed
+    </label>
+    <div class="spacer"></div>
+    <div class="synctag" id="syncTag"><span class="dot"></span><span id="syncLabel">connecting…</span></div>
+  </div>
+
+  <div class="banner" id="reminderBanner" style="display:none;">
+    <div class="flag">⏰</div>
+    <div class="body">
+      <div class="headline" id="bannerHeadline"></div>
+      <ul id="bannerList"></ul>
+    </div>
+  </div>
+
+  <div class="board" id="board">
+    <div class="col high">
+      <div class="col-head"><span class="swatch"></span><h2>High priority</h2><span class="count" id="count-high">0</span></div>
+      <div class="cards" id="cards-high"></div>
+    </div>
+    <div class="col med">
+      <div class="col-head"><span class="swatch"></span><h2>Medium priority</h2><span class="count" id="count-medium">0</span></div>
+      <div class="cards" id="cards-medium"></div>
+    </div>
+    <div class="col low">
+      <div class="col-head"><span class="swatch"></span><h2>Low priority</h2><span class="count" id="count-low">0</span></div>
+      <div class="cards" id="cards-low"></div>
+    </div>
+  </div>
+
+  <footer class="note">
+    Marking a task complete opens a pre-filled email to the assigned manager from your own mail app — nothing is sent silently.
+    Recurring tasks automatically re-open with the next occurrence's deadline once completed. Everyone with this page open shares the same live board.
+  </footer>
+</div>
+
+<div id="taskModalOverlay" class="overlay" style="display:none;">
+  <div class="modal">
+    <button type="button" class="btn-icon modal-close" id="taskModalClose">✕</button>
+    <h3 id="taskModalTitle">New task</h3>
+    <div class="field">
+      <label>Task title</label>
+      <input id="f-title" placeholder="e.g. Reconcile weekly sales export">
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Priority</label>
+        <select id="f-priority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Deadline</label>
+        <input id="f-deadline" type="date">
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Assigned manager</label>
+        <select id="f-manager"></select>
+      </div>
+      <div class="field">
+        <label>Recurs</label>
+        <select id="f-recurring">
+          <option value="none">Does not recur</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="biweekly">Every 2 weeks</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Excel file link</label>
+      <input id="f-excel" placeholder="https://...xlsx or SharePoint/Drive link">
+    </div>
+    <div class="field">
+      <label>Manager notes</label>
+      <textarea id="f-notes" rows="3" placeholder="Notes from the assigned manager (instructions, feedback, status updates)…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="deleteTaskBtn" style="display:none; margin-right:auto; color:var(--high);">Delete task</button>
+      <button type="button" class="btn btn-ghost" id="taskCancelBtn">Cancel</button>
+      <button type="button" class="btn btn-primary" id="taskSaveBtn">Save task</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:560px;">
+    <button type="button" class="btn-icon modal-close" id="settingsClose">✕</button>
+    <h3>Managers &amp; settings</h3>
+    <div class="settings-grid" id="settingsManagers"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="settingsSaveBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DEFAULT_STATE = {
+    staffName: "Staff member",
+    managers: [
+      { id:"m1", name:"Jonia", region:"NY",   tz:"America/New_York", email:"nysalesmgr@hericoll.com" },
+      { id:"m2", name:"PK",    region:"Xian", tz:"Asia/Shanghai",    email:"pk@yourcompany.com" },
+      { id:"m3", name:"Karen/Atiqah", region:"SG-XHS", tz:"Asia/Singapore", email:"kchia@hericoll.com, sgenquiry@hericoll.com" }
+    ]
+  };
+
+  // Fill this in with your deployed Google Apps Script Web App URL (ends in /exec) to run
+  // this page standalone (e.g. on GitHub Pages) with Google Sheets as the shared backend.
+  // Leave blank when running inside a Claude artifact — that uses Claude's built-in "db"
+  // capability instead and ignores this.
+  var SHEETS_API_URL = "";
+  var SHEETS_POLL_MS = 15000;
+
+  function isoInDays(n){
+    var d = new Date();
+    d.setDate(d.getDate() + n);
+    return d.toISOString().slice(0,10);
+  }
+  function nowIso(){ return new Date().toISOString(); }
+  function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
+
+  var state = {
+    connected: false,
+    config: JSON.parse(JSON.stringify(DEFAULT_STATE)),
+    tasks: [],
+    showDone: false,
+    editingTaskId: null
+  };
+
+  var db = null;
+  var configRef = null;
+  var tasksCol = null;
+
+  function managerById(id){
+    var m = state.config.managers.filter(function(x){ return x.id === id; })[0];
+    return m || null;
+  }
+
+  function fmtDate(iso){
+    if(!iso) return "No deadline";
+    var d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString(undefined, { month:"short", day:"numeric", year:"numeric" });
+  }
+
+  function daysUntil(iso){
+    if(!iso) return null;
+    var today = new Date(); today.setHours(0,0,0,0);
+    var d = new Date(iso + "T00:00:00");
+    return Math.round((d - today) / 86400000);
+  }
+
+  function recurLabel(r){
+    return { none:"", daily:"Daily", weekly:"Weekly", biweekly:"Biweekly", monthly:"Monthly" }[r] || "";
+  }
+
+  function advanceDate(iso, recurring){
+    var d = new Date(iso + "T00:00:00");
+    if(recurring === "daily") d.setDate(d.getDate() + 1);
+    else if(recurring === "weekly") d.setDate(d.getDate() + 7);
+    else if(recurring === "biweekly") d.setDate(d.getDate() + 14);
+    else if(recurring === "monthly") d.setMonth(d.getMonth() + 1);
+    return d.toISOString().slice(0,10);
+  }
+
+  // ---------- rendering ----------
+  function render(){
+    document.getElementById("staffHeading").textContent = state.config.staffName + "'s task relay";
+    document.getElementById("staffNameInput").value = state.config.staffName;
+
+    var chips = document.getElementById("managerChips");
+    chips.innerHTML = "";
+    state.config.managers.forEach(function(m){
+      var el = document.createElement("div");
+      el.className = "mgr-chip";
+      el.innerHTML = '<span class="mgr-dot"></span><div class="mgr-meta">' +
+        '<div class="mgr-name">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div></div>';
+      chips.appendChild(el);
+    });
+
+    var syncTag = document.getElementById("syncTag");
+    var syncLabel = document.getElementById("syncLabel");
+    if(state.connected){ syncTag.classList.remove("offline"); syncLabel.textContent = "live · synced"; }
+    else{ syncTag.classList.add("offline"); syncLabel.textContent = "not connected — changes stay on this device"; }
+
+    renderBanner();
+    renderBoard();
+  }
+
+  function renderBanner(){
+    var open = state.tasks.filter(function(t){ return t.status === "open"; });
+    var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0; });
+    var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 2; });
+    var banner = document.getElementById("reminderBanner");
+    var headline = document.getElementById("bannerHeadline");
+    var list = document.getElementById("bannerList");
+
+    if(overdue.length === 0 && soon.length === 0){
+      banner.style.display = "none";
+      return;
+    }
+    banner.style.display = "flex";
+    banner.classList.toggle("has-overdue", overdue.length > 0);
+    var parts = [];
+    if(overdue.length) parts.push(overdue.length + " overdue");
+    if(soon.length) parts.push(soon.length + " due within 2 days");
+    headline.textContent = "Reminder — " + parts.join(" · ");
+
+    var items = overdue.concat(soon).slice(0, 8);
+    list.innerHTML = items.map(function(t){
+      var d = daysUntil(t.deadline);
+      var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
+      var mgr = managerById(t.managerId);
+      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.name) : "unassigned") + "</span></li>";
+    }).join("");
+  }
+
+  function renderBoard(){
+    ["high","medium","low"].forEach(function(p){
+      var list = state.tasks.filter(function(t){
+        if(t.priority !== p) return false;
+        if(!state.showDone && t.status === "done") return false;
+        return true;
+      }).sort(function(a,b){
+        if(a.status !== b.status) return a.status === "done" ? 1 : -1;
+        if(!a.deadline && !b.deadline) return 0;
+        if(!a.deadline) return 1;
+        if(!b.deadline) return -1;
+        return a.deadline < b.deadline ? -1 : (a.deadline > b.deadline ? 1 : 0);
+      });
+
+      document.getElementById("count-" + p).textContent = state.tasks.filter(function(t){ return t.priority === p && t.status === "open"; }).length;
+
+      var container = document.getElementById("cards-" + p);
+      container.innerHTML = "";
+      if(list.length === 0){
+        var empty = document.createElement("div");
+        empty.className = "empty-col";
+        empty.textContent = "No tasks";
+        container.appendChild(empty);
+        return;
+      }
+      list.forEach(function(t){ container.appendChild(renderCard(t)); });
+    });
+  }
+
+  function renderCard(t){
+    var mgr = managerById(t.managerId);
+    var d = daysUntil(t.deadline);
+    var deadlineClass = (t.status === "done" || d === null) ? "" : (d < 0 ? "overdue" : (d <= 2 ? "soon" : ""));
+    var card = document.createElement("div");
+    card.className = "card" + (t.status === "done" ? " done" : "");
+
+    var row1 = document.createElement("div");
+    row1.className = "row1";
+
+    var box = document.createElement("div");
+    box.className = "checkbox" + (t.status === "done" ? " checked" : "");
+    box.textContent = t.status === "done" ? "✓" : "";
+    box.title = t.status === "done" ? "Completed" : "Mark complete & notify manager";
+    box.addEventListener("click", function(){ toggleComplete(t); });
+    row1.appendChild(box);
+
+    var title = document.createElement("div");
+    title.className = "title";
+    title.textContent = t.title;
+    row1.appendChild(title);
+
+    var menu = document.createElement("div");
+    menu.className = "cardmenu";
+    var editBtn = document.createElement("button");
+    editBtn.className = "btn-icon"; editBtn.textContent = "✎"; editBtn.title = "Edit task";
+    editBtn.addEventListener("click", function(){ openTaskModal(t); });
+    menu.appendChild(editBtn);
+    row1.appendChild(menu);
+
+    card.appendChild(row1);
+
+    var meta = document.createElement("div");
+    meta.className = "meta-row";
+    meta.innerHTML =
+      '<span class="pill deadline ' + deadlineClass + '">Deadline: ' + fmtDate(t.deadline) + '</span>' +
+      (mgr ? '<span class="pill manager">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
+      (t.recurring !== "none" ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
+      (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Excel file</a>' : '');
+    card.appendChild(meta);
+
+    if(t.notes){
+      var notes = document.createElement("div");
+      notes.className = "card-notes";
+      notes.innerHTML = "<b>Manager notes</b>" + escapeHtml(t.notes);
+      card.appendChild(notes);
+    }
+
+    return card;
+  }
+
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c];
+    });
+  }
+  function escapeAttr(s){ return escapeHtml(s); }
+
+  // ---------- actions ----------
+  function toggleComplete(t){
+    if(t.status === "done"){
+      t.status = "open";
+      t.completedAt = null;
+      persistTask(t);
+      render();
+      return;
+    }
+    var mgr = managerById(t.managerId);
+    t.status = "done";
+    t.completedAt = nowIso();
+
+    if(mgr && mgr.email){
+      var subject = "Task completed: " + t.title;
+      var bodyLines = [
+        "Hi " + mgr.name + ",",
+        "",
+        "The following task has been marked complete by " + state.config.staffName + ":",
+        "",
+        "Task: " + t.title,
+        "Priority: " + t.priority,
+        "Deadline: " + fmtDate(t.deadline),
+        t.excelLink ? "Excel file: " + t.excelLink : "",
+        t.notes ? "Notes: " + t.notes : "",
+        "Completed: " + new Date(t.completedAt).toLocaleString(),
+        "",
+        "— Sent from Task Relay"
+      ].filter(Boolean);
+      var recipients = mgr.email.split(",").map(function(e){ return e.trim(); }).filter(Boolean).join(",");
+      var mailto = "mailto:" + recipients +
+        "?subject=" + encodeURIComponent(subject) +
+        "&body=" + encodeURIComponent(bodyLines.join("\n"));
+      window.open(mailto, "_blank");
+    }
+
+    if(t.recurring && t.recurring !== "none"){
+      var next = {
+        id: uid(),
+        title: t.title,
+        priority: t.priority,
+        deadline: advanceDate(t.deadline, t.recurring),
+        excelLink: t.excelLink,
+        recurring: t.recurring,
+        managerId: t.managerId,
+        status: "open",
+        createdAt: nowIso()
+      };
+      state.tasks.push(next);
+      persistTask(next);
+    }
+
+    persistTask(t);
+    render();
+  }
+
+  function persistTask(t){
+    if(tasksCol){
+      tasksCol.doc(t.id).set(t).catch(function(){ /* offline: kept locally */ });
+      return;
+    }
+    if(sheetsEnabled()){
+      sheetsPost({ action:"upsertTask", task: t }).catch(function(){});
+    }
+  }
+  function deleteTaskRemote(id){
+    if(tasksCol){
+      tasksCol.doc(id).delete().catch(function(){});
+      return;
+    }
+    if(sheetsEnabled()){
+      sheetsPost({ action:"deleteTask", id: id }).catch(function(){});
+    }
+  }
+  function persistConfig(){
+    if(configRef){
+      configRef.set(state.config).catch(function(){});
+      return;
+    }
+    if(sheetsEnabled()){
+      state.config.managers.forEach(function(m){
+        sheetsPost({ action:"upsertManager", manager: m }).catch(function(){});
+      });
+    }
+  }
+
+  // ---------- Google Sheets backend (for standalone/GitHub Pages hosting) ----------
+  function sheetsEnabled(){ return !!SHEETS_API_URL; }
+
+  function sheetsPost(payload){
+    // Sent without a custom Content-Type header (defaults to text/plain) so the browser
+    // treats this as a "simple request" and skips a CORS preflight, which Apps Script
+    // Web Apps don't handle.
+    return fetch(SHEETS_API_URL, { method: "POST", body: JSON.stringify(payload) });
+  }
+
+  function sheetsLoad(){
+    return fetch(SHEETS_API_URL).then(function(res){ return res.json(); }).then(function(data){
+      if(data && Array.isArray(data.tasks)) state.tasks = data.tasks;
+      if(data && Array.isArray(data.managers) && data.managers.length) state.config.managers = data.managers;
+      state.connected = true;
+      render();
+    }).catch(function(){
+      state.connected = false;
+      render();
+    });
+  }
+
+  // ---------- task modal ----------
+  var taskModalOverlay = document.getElementById("taskModalOverlay");
+  function openTaskModal(task){
+    state.editingTaskId = task ? task.id : null;
+    document.getElementById("taskModalTitle").textContent = task ? "Edit task" : "New task";
+    document.getElementById("f-title").value = task ? task.title : "";
+    document.getElementById("f-priority").value = task ? task.priority : "medium";
+    document.getElementById("f-deadline").value = task ? (task.deadline || "") : "";
+    document.getElementById("f-excel").value = task ? (task.excelLink || "") : "";
+    document.getElementById("f-notes").value = task ? (task.notes || "") : "";
+    document.getElementById("f-recurring").value = task ? task.recurring : "none";
+
+    var mgrSelect = document.getElementById("f-manager");
+    mgrSelect.innerHTML = state.config.managers.map(function(m){
+      return '<option value="' + m.id + '">' + escapeHtml(m.name) + " (" + escapeHtml(m.region) + ")</option>";
+    }).join("");
+    mgrSelect.value = task ? task.managerId : (state.config.managers[0] && state.config.managers[0].id);
+
+    document.getElementById("deleteTaskBtn").style.display = task ? "inline-flex" : "none";
+    taskModalOverlay.style.display = "flex";
+    document.getElementById("f-title").focus();
+  }
+  function closeTaskModal(){ taskModalOverlay.style.display = "none"; }
+
+  document.getElementById("newTaskBtn").addEventListener("click", function(){ openTaskModal(null); });
+  document.getElementById("taskModalClose").addEventListener("click", closeTaskModal);
+  document.getElementById("taskCancelBtn").addEventListener("click", closeTaskModal);
+  taskModalOverlay.addEventListener("click", function(e){ if(e.target === taskModalOverlay) closeTaskModal(); });
+
+  document.getElementById("taskSaveBtn").addEventListener("click", function(){
+    var title = document.getElementById("f-title").value.trim();
+    if(!title){ document.getElementById("f-title").focus(); return; }
+    var deadline = document.getElementById("f-deadline").value;
+    var data = {
+      title: title,
+      priority: document.getElementById("f-priority").value,
+      deadline: deadline,
+      excelLink: document.getElementById("f-excel").value.trim(),
+      notes: document.getElementById("f-notes").value.trim(),
+      recurring: document.getElementById("f-recurring").value,
+      managerId: document.getElementById("f-manager").value
+    };
+    if(state.editingTaskId){
+      var existing = state.tasks.filter(function(t){ return t.id === state.editingTaskId; })[0];
+      if(existing){
+        Object.assign(existing, data);
+        persistTask(existing);
+      }
+    } else {
+      var t = Object.assign({ id: uid(), status:"open", createdAt: nowIso() }, data);
+      state.tasks.push(t);
+      persistTask(t);
+    }
+    closeTaskModal();
+    render();
+  });
+
+  document.getElementById("deleteTaskBtn").addEventListener("click", function(){
+    if(!state.editingTaskId) return;
+    var id = state.editingTaskId;
+    state.tasks = state.tasks.filter(function(t){ return t.id !== id; });
+    deleteTaskRemote(id);
+    closeTaskModal();
+    render();
+  });
+
+  // ---------- settings modal ----------
+  var settingsOverlay = document.getElementById("settingsOverlay");
+  function openSettings(){
+    var grid = document.getElementById("settingsManagers");
+    grid.innerHTML = "";
+    state.config.managers.forEach(function(m, idx){
+      var block = document.createElement("div");
+      block.className = "settings-mgr";
+      block.innerHTML =
+        '<div class="field-row">' +
+          '<div class="field"><label>Name</label><input data-idx="' + idx + '" data-k="name" value="' + escapeAttr(m.name) + '"></div>' +
+          '<div class="field"><label>Region</label><input data-idx="' + idx + '" data-k="region" value="' + escapeAttr(m.region) + '"></div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Email(s) — comma-separated for multiple</label><input data-idx="' + idx + '" data-k="email" placeholder="name@company.com, name2@company.com" value="' + escapeAttr(m.email) + '">' +
+        '</div>';
+      grid.appendChild(block);
+    });
+    settingsOverlay.style.display = "flex";
+  }
+  document.getElementById("settingsBtn").addEventListener("click", openSettings);
+  document.getElementById("settingsClose").addEventListener("click", function(){ settingsOverlay.style.display = "none"; });
+  settingsOverlay.addEventListener("click", function(e){ if(e.target === settingsOverlay) settingsOverlay.style.display = "none"; });
+
+  document.getElementById("settingsSaveBtn").addEventListener("click", function(){
+    try{
+      var inputs = document.getElementById("settingsManagers").querySelectorAll("input");
+      inputs.forEach(function(inp){
+        var idx = Number(inp.getAttribute("data-idx"));
+        var k = inp.getAttribute("data-k");
+        if(state.config.managers[idx]) state.config.managers[idx][k] = inp.value.trim();
+      });
+      persistConfig();
+      settingsOverlay.style.display = "none";
+      render();
+    }catch(err){
+      console.error("Settings save failed:", err);
+      alert("Couldn't save settings: " + err.message);
+    }
+  });
+
+  document.getElementById("staffNameInput").addEventListener("change", function(){
+    state.config.staffName = this.value.trim() || "Staff member";
+    persistConfig();
+    render();
+  });
+
+  document.getElementById("showDoneToggle").addEventListener("change", function(){
+    state.showDone = this.checked;
+    render();
+  });
+
+  // ---------- db wiring ----------
+  render();
+
+  (async function initDb(){
+    try{
+      db = (typeof claude !== "undefined") ? await claude.use("db") : null;
+    }catch(e){ db = null; }
+
+    if(!db){
+      if(sheetsEnabled()){
+        sheetsLoad();
+        setInterval(sheetsLoad, SHEETS_POLL_MS);
+      } else {
+        state.connected = false;
+        render();
+      }
+      return;
+    }
+
+    configRef = db.doc("meta/config");
+    tasksCol = db.collection("tasks");
+
+    configRef.onSnapshot(function(snap){
+      if(snap.exists){
+        var data = snap.data();
+        if(data && data.managers && data.managers.length){
+          state.config = data;
+        }
+      } else {
+        configRef.set(state.config).catch(function(){});
+      }
+      state.connected = true;
+      render();
+    }, function(){ state.connected = false; render(); });
+
+    tasksCol.onSnapshot(function(qsnap){
+      if(qsnap.empty && state.tasks.length === 0){
+        // nothing yet, leave as-is
+      }
+      if(!qsnap.empty || qsnap.docs.length > 0){
+        state.tasks = qsnap.docs.map(function(d){ return d.data(); });
+      }
+      state.connected = true;
+      render();
+    }, function(){ state.connected = false; render(); });
+
+  })();
+})();
+</script>
