@@ -122,16 +122,6 @@
     font-family:"Fraunces", serif; font-weight:600; font-size:30px;
     margin:0; text-wrap: balance; letter-spacing:-.01em;
   }
-  .brand .staffline{
-    font-size:14px; color: var(--ink-soft);
-  }
-  .brand .staffline b{ color: var(--ink); font-weight:600; }
-  .brand .staffline input{
-    font: inherit; color: inherit; background:transparent; border:none; border-bottom:1px dashed var(--border);
-    padding:0 2px; width: 160px;
-  }
-  .brand .staffline input:focus{ outline:none; border-color: var(--accent); }
-
   .managers{ display:flex; gap:10px; flex-wrap:wrap; }
   .mgr-chip{
     display:flex; align-items:center; gap:8px;
@@ -543,11 +533,6 @@
     }
   }catch(e){ emailjsReady = false; }
 
-  function isoInDays(n){
-    var d = new Date();
-    d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0,10);
-  }
   function nowIso(){ return new Date().toISOString(); }
   function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -702,13 +687,7 @@
     if(soon.length) parts.push(soon.length + " due within 7 days");
     headline.textContent = "Reminder — " + parts.join(" · ");
 
-    var items = overdue.concat(soon).slice(0, 8);
-    list.innerHTML = items.map(function(t){
-      var d = daysUntil(t.deadline);
-      var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
-      var mgr = managerById(t.managerId);
-      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.region) : "unassigned") + "</span></li>";
-    }).join("");
+    list.innerHTML = reminderListItemsHtml(overdue.concat(soon).slice(0, 8));
   }
 
   function renderBoard(){
@@ -1108,12 +1087,21 @@
     render();
   }
 
+  // Tracks tasks this tab wrote very recently, so a Supabase poll that's still
+  // catching up (replication/response lag) doesn't briefly clobber a local
+  // change — e.g. a "Mark complete" or "Send back" appearing to undo itself
+  // until the next poll cycle.
+  var recentLocalWrites = {};
+  var RECENT_WRITE_GUARD_MS = 12000;
+  function markRecentWrite(id){ recentLocalWrites[id] = Date.now(); }
+
   function persistTask(t){
     if(tasksCol){
       tasksCol.doc(t.id).set(t).catch(function(){ /* offline: kept locally */ });
       return;
     }
     if(supabaseEnabled()){
+      markRecentWrite(t.id);
       supabaseUpsert("tasks", t).catch(function(err){
         console.error(err);
         showEmailToast("⚠️ Couldn't save — " + err.message);
@@ -1126,6 +1114,7 @@
       return;
     }
     if(supabaseEnabled()){
+      delete recentLocalWrites[id];
       supabaseDelete("tasks", id).catch(function(err){
         console.error(err);
         showEmailToast("⚠️ Couldn't delete — " + err.message);
@@ -1190,13 +1179,36 @@
     });
   }
 
+  function mergeIncomingTasks(incoming){
+    var now = Date.now();
+    var isRecent = function(id){ return recentLocalWrites[id] && (now - recentLocalWrites[id]) < RECENT_WRITE_GUARD_MS; };
+    var localById = {};
+    state.tasks.forEach(function(t){ localById[t.id] = t; });
+
+    var merged = incoming.map(function(ft){
+      if(isRecent(ft.id) && localById[ft.id]) return localById[ft.id];
+      return ft;
+    });
+    // Keep very-recently-created local tasks the poll hasn't picked up yet.
+    state.tasks.forEach(function(lt){
+      if(isRecent(lt.id) && !merged.some(function(m){ return m.id === lt.id; })){
+        merged.push(lt);
+      }
+    });
+    // Once a write ages out of the guard window, stop tracking it.
+    Object.keys(recentLocalWrites).forEach(function(id){
+      if(!isRecent(id)) delete recentLocalWrites[id];
+    });
+    return merged;
+  }
+
   function supabaseLoad(){
     return Promise.all([
       fetch(SUPABASE_URL + "/rest/v1/tasks?select=*", { headers: supabaseHeaders() }).then(function(r){ return r.json(); }),
       fetch(SUPABASE_URL + "/rest/v1/managers?select=*", { headers: supabaseHeaders() }).then(function(r){ return r.json(); })
     ]).then(function(results){
       var tasks = results[0], managers = results[1];
-      if(Array.isArray(tasks)) state.tasks = tasks;
+      if(Array.isArray(tasks)) state.tasks = mergeIncomingTasks(tasks);
       if(Array.isArray(managers) && managers.length) state.config.managers = managers;
       state.connected = true;
       dataLoadedOnce = true;
@@ -1435,23 +1447,17 @@
   settingsOverlay.addEventListener("click", function(e){ if(e.target === settingsOverlay) settingsOverlay.style.display = "none"; });
 
   document.getElementById("settingsSaveBtn").addEventListener("click", function(){
-    try{
-      state.config.staffEmail = document.getElementById("settingsStaffEmail").value.trim();
-      var inputs = document.getElementById("settingsManagers").querySelectorAll("input");
-      inputs.forEach(function(inp){
-        var idx = Number(inp.getAttribute("data-idx"));
-        var k = inp.getAttribute("data-k");
-        if(state.config.managers[idx]) state.config.managers[idx][k] = inp.value.trim();
-      });
-      persistConfig();
-      settingsOverlay.style.display = "none";
-      render();
-    }catch(err){
-      console.error("Settings save failed:", err);
-      alert("Couldn't save settings: " + err.message);
-    }
+    state.config.staffEmail = document.getElementById("settingsStaffEmail").value.trim();
+    var inputs = document.getElementById("settingsManagers").querySelectorAll("input");
+    inputs.forEach(function(inp){
+      var idx = Number(inp.getAttribute("data-idx"));
+      var k = inp.getAttribute("data-k");
+      if(state.config.managers[idx]) state.config.managers[idx][k] = inp.value.trim();
+    });
+    persistConfig();
+    settingsOverlay.style.display = "none";
+    render();
   });
-
 
   document.getElementById("showDoneToggle").addEventListener("change", function(){
     state.showDone = this.checked;
