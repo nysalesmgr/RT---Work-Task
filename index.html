@@ -34,9 +34,9 @@
     --shadow: 0 1px 2px rgba(48,60,108,.08), 0 4px 14px rgba(48,60,108,.08);
 
     /* Per-manager colour coding */
-    --mgr-purple: #8b5cf6;
-    --mgr-purple-text: #6d28d9;
-    --mgr-purple-soft: #ede4fe;
+    --mgr-pink: #ec6ba5;
+    --mgr-pink-text: #c22d78;
+    --mgr-pink-soft: #fce3ef;
     --mgr-blue: #4a8fe0;
     --mgr-blue-text: #1d5fac;
     --mgr-blue-soft: #dfeafd;
@@ -73,9 +73,9 @@
       --done: #7c85a3;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
 
-      --mgr-purple: #a78bfa;
-      --mgr-purple-text: #c4b5fd;
-      --mgr-purple-soft: #302150;
+      --mgr-pink: #f0a8cb;
+      --mgr-pink-text: #f5c2dd;
+      --mgr-pink-soft: #3a1f30;
       --mgr-blue: #7db4f0;
       --mgr-blue-text: #a9cff7;
       --mgr-blue-soft: #1c2f4a;
@@ -112,9 +112,9 @@
     --done: #7c85a3;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
 
-    --mgr-purple: #a78bfa;
-    --mgr-purple-text: #c4b5fd;
-    --mgr-purple-soft: #302150;
+    --mgr-pink: #f0a8cb;
+    --mgr-pink-text: #f5c2dd;
+    --mgr-pink-soft: #3a1f30;
     --mgr-blue: #7db4f0;
     --mgr-blue-text: #a9cff7;
     --mgr-blue-soft: #1c2f4a;
@@ -164,16 +164,26 @@
   .mgr-dot{ width:8px; height:8px; border-radius:50%; background: var(--accent); flex:none; }
   .mgr-meta .mgr-name{ font-weight:600; font-size:16px; }
   .mgr-name-c{ font-weight:600; font-size:16px; }
-  .mgr-c-purple .mgr-dot, .mgr-dot.mgr-c-purple{ background: var(--mgr-purple); }
+  .mgr-progress-bar{
+    display:flex; height:6px; border-radius:4px; overflow:hidden; background: var(--surface-2);
+    margin-top:7px; width:100%;
+  }
+  .mgr-progress-seg{ height:100%; }
+  .mgr-progress-seg.seg-not_started{ background: var(--ink-faint); opacity:.35; }
+  .mgr-progress-seg.seg-in_progress{ background: var(--accent); }
+  .mgr-progress-seg.seg-pending{ background: var(--med); }
+  .mgr-progress-seg.seg-completed{ background: var(--low); }
+  .mgr-progress-label{ font-size:10.5px; color: var(--ink-faint); margin-top:4px; font-family:"IBM Plex Mono", monospace; }
+  .mgr-c-pink .mgr-dot, .mgr-dot.mgr-c-pink{ background: var(--mgr-pink); }
   .mgr-c-blue .mgr-dot, .mgr-dot.mgr-c-blue{ background: var(--mgr-blue); }
   .mgr-c-orange .mgr-dot, .mgr-dot.mgr-c-orange{ background: var(--mgr-orange); }
-  .mgr-c-purple .mgr-name-c, .mgr-name-c.mgr-c-purple{ color: var(--mgr-purple-text); }
+  .mgr-c-pink .mgr-name-c, .mgr-name-c.mgr-c-pink{ color: var(--mgr-pink-text); }
   .mgr-c-blue .mgr-name-c, .mgr-name-c.mgr-c-blue{ color: var(--mgr-blue-text); }
   .mgr-c-orange .mgr-name-c, .mgr-name-c.mgr-c-orange{ color: var(--mgr-orange-text); }
-  .mgr-chip.mgr-c-purple{ border-color: color-mix(in srgb, var(--mgr-purple) 45%, var(--border)); }
+  .mgr-chip.mgr-c-pink{ border-color: color-mix(in srgb, var(--mgr-pink) 45%, var(--border)); }
   .mgr-chip.mgr-c-blue{ border-color: color-mix(in srgb, var(--mgr-blue) 45%, var(--border)); }
   .mgr-chip.mgr-c-orange{ border-color: color-mix(in srgb, var(--mgr-orange) 45%, var(--border)); }
-  .pill.manager.mgr-c-purple{ background: var(--surface); color: var(--mgr-purple-text); border:1px solid color-mix(in srgb, var(--mgr-purple) 55%, var(--border)); }
+  .pill.manager.mgr-c-pink{ background: var(--surface); color: var(--mgr-pink-text); border:1px solid color-mix(in srgb, var(--mgr-pink) 55%, var(--border)); }
   .pill.manager.mgr-c-blue{ background: var(--surface); color: var(--mgr-blue-text); border:1px solid color-mix(in srgb, var(--mgr-blue) 55%, var(--border)); }
   .pill.manager.mgr-c-orange{ background: var(--surface); color: var(--mgr-orange-text); border:1px solid color-mix(in srgb, var(--mgr-orange) 55%, var(--border)); }
 
@@ -242,7 +252,7 @@
   .col.med .card{ border-left-color: var(--med); }
   .col.low .card{ border-left-color: var(--low); }
   .card.done{ opacity:.6; border-left-color: var(--border); }
-  .card.mgr-c-purple{ background: var(--mgr-purple-soft); }
+  .card.mgr-c-pink{ background: var(--mgr-pink-soft); }
   .card.mgr-c-blue{ background: var(--mgr-blue-soft); }
   .card.mgr-c-orange{ background: var(--mgr-orange-soft); }
   .card .row1{ display:flex; align-items:flex-start; gap:9px; }
@@ -301,10 +311,10 @@
   }
   a.xl-link:hover{ text-decoration:underline; }
   .card-notes{
-    font-size:12.5px; color: var(--ink-soft); background: var(--surface-2); border-radius:8px;
-    padding:8px 10px; white-space: pre-wrap; word-break: break-word;
+    font-size:13px; color: #1a1a1a; background: #ffffff; border:1px solid var(--border); border-radius:8px;
+    padding:8px 10px; white-space: pre-wrap; word-break: break-word; box-shadow: var(--shadow);
   }
-  .card-notes b{ color: var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
+  .card-notes b{ color: #1a1a1a; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
   .card-staff-actions{ display:flex; gap:8px; }
   .btn-extension{
     font: inherit; font-weight:600; font-size:12.5px; cursor:pointer;
@@ -642,8 +652,8 @@
     return m || null;
   }
 
-  var MANAGER_COLOR_PALETTE = ["purple", "blue", "orange"];
-  var MANAGER_COLOR_BY_ID = { m1: "purple", m2: "blue", m3: "orange" };
+  var MANAGER_COLOR_PALETTE = ["pink", "blue", "orange"];
+  var MANAGER_COLOR_BY_ID = { m1: "pink", m2: "blue", m3: "orange" };
   function managerColorKey(mgr){
     if(!mgr) return "";
     if(MANAGER_COLOR_BY_ID[mgr.id]) return MANAGER_COLOR_BY_ID[mgr.id];
@@ -712,8 +722,21 @@
       el.type = "button";
       el.className = "mgr-chip " + managerColorClass(m);
       el.title = "View all tasks for " + m.name;
+      var stats = managerProgressStats(m.id);
+      var barHtml = "";
+      if(stats.total){
+        var segs = PROGRESS_ORDER.concat(["completed"]).map(function(k){
+          var pct = stats.counts[k] / stats.total * 100;
+          return pct > 0 ? '<span class="mgr-progress-seg seg-' + k + '" style="width:' + pct + '%"></span>' : "";
+        }).join("");
+        barHtml = '<div class="mgr-progress-bar" title="' +
+          escapeAttr(PROGRESS_ORDER.concat(["completed"]).map(function(k){ return progressLabel(k) + ": " + stats.counts[k]; }).join(" · ")) +
+          '">' + segs + '</div>' +
+          '<div class="mgr-progress-label">' + stats.counts.completed + '/' + stats.total + ' completed</div>';
+      }
       el.innerHTML = '<span class="mgr-dot"></span><div class="mgr-meta">' +
-        '<div class="mgr-name mgr-name-c">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div></div>';
+        '<div class="mgr-name mgr-name-c">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div>' +
+        barHtml + '</div>';
       el.addEventListener("click", function(){ openManagerOverview(m.id); });
       chips.appendChild(el);
     });
@@ -1090,6 +1113,16 @@
   function effectiveProgress(t){
     if(t.status === "done") return "completed";
     return (t.progress && PROGRESS_LABELS[t.progress]) ? t.progress : "not_started";
+  }
+  function managerProgressStats(managerId){
+    var counts = { not_started: 0, in_progress: 0, pending: 0, completed: 0 };
+    var total = 0;
+    state.tasks.forEach(function(t){
+      if(t.managerId !== managerId) return;
+      counts[effectiveProgress(t)]++;
+      total++;
+    });
+    return { counts: counts, total: total };
   }
   function renderHistoryList(t){
     var events = Array.isArray(t.history) ? t.history : [];
