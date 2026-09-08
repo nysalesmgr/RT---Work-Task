@@ -170,13 +170,13 @@
   .banner .body{ flex:1; }
   .banner .headline{ font-weight:600; font-size:14px; margin-bottom:4px; }
   .banner ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; }
-  .banner li{ font-size:13px; color: var(--ink-soft); display:flex; gap:8px; align-items:baseline; }
-  .banner li .tag{
+  .banner li, #reminderPopupList li{ font-size:13px; color: var(--ink-soft); display:flex; gap:8px; align-items:baseline; }
+  .banner li .tag, #reminderPopupList li .tag{
     font-family:"IBM Plex Mono", monospace; font-size:11px; padding:1px 6px; border-radius:5px;
   }
-  .banner li .tag.overdue{ background: var(--high-soft); color: var(--high-text); }
-  .banner li .tag.soon{ background: var(--med-soft); color: var(--med-text); }
-  .banner li b{ color: var(--ink); font-weight:600; }
+  .banner li .tag.overdue, #reminderPopupList li .tag.overdue{ background: var(--high-soft); color: var(--high-text); }
+  .banner li .tag.soon, #reminderPopupList li .tag.soon{ background: var(--med-soft); color: var(--med-text); }
+  .banner li b, #reminderPopupList li b{ color: var(--ink); font-weight:600; }
 
   /* ---------- board ---------- */
   .board{ display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; align-items:start; }
@@ -442,6 +442,36 @@
   </div>
 </div>
 
+<div id="extensionOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <button type="button" class="btn-icon modal-close" id="extensionClose">✕</button>
+    <h3>Request extension</h3>
+    <div class="field">
+      <label>Requested new deadline</label>
+      <input id="extensionDeadline" type="date">
+    </div>
+    <div class="field">
+      <label>Reason</label>
+      <textarea id="extensionReason" rows="4" placeholder="Explain why more time is needed…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="extensionCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="extensionConfirm">Send request</button>
+    </div>
+  </div>
+</div>
+
+<div id="reminderPopupOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:540px;">
+    <button type="button" class="btn-icon modal-close" id="reminderPopupClose">✕</button>
+    <h3 id="reminderPopupHeadline" style="padding-right:32px; font-size:20px;">Reminder</h3>
+    <ul id="reminderPopupList" class="banner-list" style="margin:14px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px; max-height:360px; overflow-y:auto; font-size:15px;"></ul>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="reminderPopupOk">Got it</button>
+    </div>
+  </div>
+</div>
+
 <div id="historyOverlay" class="overlay" style="display:none;">
   <div class="modal" style="max-width:440px;">
     <button type="button" class="btn-icon modal-close" id="historyClose">✕</button>
@@ -604,12 +634,53 @@
 
     renderBanner();
     renderBoard();
+
+    if(dataLoadedOnce) maybeShowReminderPopup();
   }
 
-  function renderBanner(){
+  function getOverdueAndSoon(){
     var open = state.tasks.filter(function(t){ return t.status === "open"; });
     var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0; });
     var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 7; });
+    return { overdue: overdue, soon: soon };
+  }
+  function reminderListItemsHtml(items){
+    return items.map(function(t){
+      var d = daysUntil(t.deadline);
+      var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
+      var mgr = managerById(t.managerId);
+      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.region) : "unassigned") + "</span></li>";
+    }).join("");
+  }
+
+  var reminderPopupShown = false;
+  var dataLoadedOnce = false;
+  function maybeShowReminderPopup(){
+    if(reminderPopupShown) return;
+    if(getRole() !== "staff") return;
+    reminderPopupShown = true;
+    var r = getOverdueAndSoon();
+    var headline = document.getElementById("reminderPopupHeadline");
+    var list = document.getElementById("reminderPopupList");
+    if(r.overdue.length === 0 && r.soon.length === 0){
+      headline.textContent = "✅ All caught up";
+      list.innerHTML = '<li style="color:var(--ink-faint);">Nothing overdue or due within 7 days.</li>';
+    } else {
+      var parts = [];
+      if(r.overdue.length) parts.push(r.overdue.length + " overdue");
+      if(r.soon.length) parts.push(r.soon.length + " due within 7 days");
+      headline.textContent = "⏰ Reminder — " + parts.join(" · ");
+      list.innerHTML = reminderListItemsHtml(r.overdue.concat(r.soon).slice(0, 8));
+    }
+    document.getElementById("reminderPopupOverlay").style.display = "flex";
+  }
+  function closeReminderPopup(){
+    document.getElementById("reminderPopupOverlay").style.display = "none";
+  }
+
+  function renderBanner(){
+    var r = getOverdueAndSoon();
+    var overdue = r.overdue, soon = r.soon;
     var banner = document.getElementById("reminderBanner");
     var flag = document.getElementById("bannerFlag");
     var headline = document.getElementById("bannerHeadline");
@@ -696,6 +767,12 @@
 
     var alwaysMenu = document.createElement("div");
     alwaysMenu.className = "cardmenu-always";
+    if(getRole() === "staff" && t.status === "open"){
+      var extBtn = document.createElement("button");
+      extBtn.className = "btn-icon"; extBtn.textContent = "⏳"; extBtn.title = "Request extension";
+      extBtn.addEventListener("click", function(){ openExtension(t); });
+      alwaysMenu.appendChild(extBtn);
+    }
     var histBtn = document.createElement("button");
     histBtn.className = "btn-icon"; histBtn.textContent = "🕘"; histBtn.title = "View history";
     histBtn.addEventListener("click", function(){ openHistory(t); });
@@ -718,12 +795,14 @@
 
     card.appendChild(row1);
 
+    var pendingExt = pendingExtension(t);
     var meta = document.createElement("div");
     meta.className = "meta-row";
     meta.innerHTML =
       '<span class="pill deadline ' + deadlineClass + '">Deadline: ' + fmtDate(t.deadline) + '</span>' +
       (mgr ? '<span class="pill manager">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
-      (t.recurring !== "none" ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
+      ((t.recurring && t.recurring !== "none") ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
+      (pendingExt ? '<span class="pill recurring" title="' + escapeAttr(pendingExt.reason || "") + '">⏳ Extension requested' + (pendingExt.requestedDeadline ? " → " + fmtDate(pendingExt.requestedDeadline) : "") + '</span>' : '') +
       (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Document</a>' : '');
     card.appendChild(meta);
 
@@ -839,6 +918,8 @@
     if(ev.type === "completed") return "Completed";
     if(ev.type === "sent_back") return "Sent back" + (ev.by ? " by " + ev.by : "") + (ev.reason ? ": " + ev.reason : "");
     if(ev.type === "reopened") return "Reopened";
+    if(ev.type === "extension_requested") return "Extension requested" + (ev.requestedDeadline ? " — new deadline: " + fmtDate(ev.requestedDeadline) : "") + (ev.reason ? ": " + ev.reason : "");
+    if(ev.type === "extension_reviewed") return "Deadline updated to " + fmtDate(ev.newDeadline);
     return ev.type;
   }
   function historyIcon(ev){
@@ -846,7 +927,14 @@
     if(ev.type === "completed") return "✅";
     if(ev.type === "sent_back") return "⤺";
     if(ev.type === "reopened") return "↺";
+    if(ev.type === "extension_requested") return "⏳";
+    if(ev.type === "extension_reviewed") return "📅";
     return "•";
+  }
+  function pendingExtension(t){
+    if(t.status !== "open" || !Array.isArray(t.history) || !t.history.length) return null;
+    var last = t.history[t.history.length - 1];
+    return last.type === "extension_requested" ? last : null;
   }
   function renderHistoryList(t){
     var events = Array.isArray(t.history) ? t.history : [];
@@ -870,6 +958,51 @@
   function closeHistory(){
     document.getElementById("historyOverlay").style.display = "none";
     historyTaskId = null;
+  }
+
+  var extensionTaskId = null;
+  function openExtension(t){
+    extensionTaskId = t.id;
+    document.getElementById("extensionDeadline").value = t.deadline || "";
+    document.getElementById("extensionReason").value = "";
+    document.getElementById("extensionOverlay").style.display = "flex";
+  }
+  function closeExtension(){
+    document.getElementById("extensionOverlay").style.display = "none";
+    extensionTaskId = null;
+  }
+  function confirmExtension(){
+    var t = state.tasks.find(function(x){ return x.id === extensionTaskId; });
+    if(!t){ closeExtension(); return; }
+    var requestedDeadline = document.getElementById("extensionDeadline").value;
+    var reason = document.getElementById("extensionReason").value.trim();
+    if(!reason){ document.getElementById("extensionReason").focus(); return; }
+
+    pushHistory(t, { type:"extension_requested", by: state.config.staffName, requestedDeadline: requestedDeadline, reason: reason });
+    persistTask(t);
+
+    var mgr = managerById(t.managerId);
+    if(mgr && mgr.email){
+      var subject = "Extension requested: " + t.title;
+      var bodyLines = [
+        "Hi " + mgr.name + ",",
+        "",
+        state.config.staffName + " has requested more time on the following task:",
+        "",
+        "Task: " + t.title,
+        "Current deadline: " + fmtDate(t.deadline),
+        requestedDeadline ? "Requested new deadline: " + fmtDate(requestedDeadline) : "",
+        "Reason: " + reason,
+        "",
+        "Thank you",
+        "Regards,",
+        state.config.staffName
+      ].filter(Boolean);
+      sendNotification({ to: mgr.email, subject: subject, body: bodyLines.join("\n") });
+    }
+
+    closeExtension();
+    render();
   }
 
   // ---------- actions ----------
@@ -981,7 +1114,10 @@
       return;
     }
     if(supabaseEnabled()){
-      supabaseUpsert("tasks", t).catch(function(){});
+      supabaseUpsert("tasks", t).catch(function(err){
+        console.error(err);
+        showEmailToast("⚠️ Couldn't save — " + err.message);
+      });
     }
   }
   function deleteTaskRemote(id){
@@ -990,7 +1126,10 @@
       return;
     }
     if(supabaseEnabled()){
-      supabaseDelete("tasks", id).catch(function(){});
+      supabaseDelete("tasks", id).catch(function(err){
+        console.error(err);
+        showEmailToast("⚠️ Couldn't delete — " + err.message);
+      });
     }
   }
   function persistConfig(){
@@ -1000,7 +1139,10 @@
     }
     if(supabaseEnabled()){
       state.config.managers.forEach(function(m){
-        supabaseUpsert("managers", m).catch(function(){});
+        supabaseUpsert("managers", m).catch(function(err){
+          console.error(err);
+          showEmailToast("⚠️ Couldn't save settings — " + err.message);
+        });
       });
     }
   }
@@ -1024,6 +1166,13 @@
       method: "POST",
       headers: supabaseHeaders({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
       body: JSON.stringify(record)
+    }).then(function(r){
+      if(!r.ok){
+        return r.text().then(function(msg){
+          throw new Error("Save failed (" + r.status + "): " + (msg || "check your Supabase table columns"));
+        });
+      }
+      return r;
     });
   }
 
@@ -1031,6 +1180,13 @@
     return fetch(SUPABASE_URL + "/rest/v1/" + table + "?id=eq." + encodeURIComponent(id), {
       method: "DELETE",
       headers: supabaseHeaders({ "Prefer": "return=minimal" })
+    }).then(function(r){
+      if(!r.ok){
+        return r.text().then(function(msg){
+          throw new Error("Delete failed (" + r.status + "): " + (msg || "check your Supabase table"));
+        });
+      }
+      return r;
     });
   }
 
@@ -1043,6 +1199,7 @@
       if(Array.isArray(tasks)) state.tasks = tasks;
       if(Array.isArray(managers) && managers.length) state.config.managers = managers;
       state.connected = true;
+      dataLoadedOnce = true;
       render();
     }).catch(function(){
       state.connected = false;
@@ -1097,7 +1254,11 @@
     if(state.editingTaskId){
       var existing = state.tasks.filter(function(t){ return t.id === state.editingTaskId; })[0];
       if(existing){
+        var hadPendingExt = pendingExtension(existing);
         Object.assign(existing, data);
+        if(hadPendingExt){
+          pushHistory(existing, { type:"extension_reviewed", newDeadline: existing.deadline });
+        }
         persistTask(existing);
       }
     } else {
@@ -1213,6 +1374,19 @@
   document.getElementById("throwbackConfirm").addEventListener("click", confirmThrowback);
   document.getElementById("throwbackOverlay").addEventListener("click", function(e){
     if(e.target === document.getElementById("throwbackOverlay")) closeThrowback();
+  });
+
+  document.getElementById("extensionClose").addEventListener("click", closeExtension);
+  document.getElementById("extensionCancel").addEventListener("click", closeExtension);
+  document.getElementById("extensionConfirm").addEventListener("click", confirmExtension);
+  document.getElementById("extensionOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("extensionOverlay")) closeExtension();
+  });
+
+  document.getElementById("reminderPopupClose").addEventListener("click", closeReminderPopup);
+  document.getElementById("reminderPopupOk").addEventListener("click", closeReminderPopup);
+  document.getElementById("reminderPopupOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("reminderPopupOverlay")) closeReminderPopup();
   });
 
   document.getElementById("historyClose").addEventListener("click", closeHistory);
@@ -1332,6 +1506,7 @@
         state.tasks = qsnap.docs.map(function(d){ return d.data(); });
       }
       state.connected = true;
+      dataLoadedOnce = true;
       render();
     }, function(){ state.connected = false; render(); });
 
