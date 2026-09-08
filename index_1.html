@@ -122,16 +122,6 @@
     font-family:"Fraunces", serif; font-weight:600; font-size:30px;
     margin:0; text-wrap: balance; letter-spacing:-.01em;
   }
-  .brand .staffline{
-    font-size:14px; color: var(--ink-soft);
-  }
-  .brand .staffline b{ color: var(--ink); font-weight:600; }
-  .brand .staffline input{
-    font: inherit; color: inherit; background:transparent; border:none; border-bottom:1px dashed var(--border);
-    padding:0 2px; width: 160px;
-  }
-  .brand .staffline input:focus{ outline:none; border-color: var(--accent); }
-
   .managers{ display:flex; gap:10px; flex-wrap:wrap; }
   .mgr-chip{
     display:flex; align-items:center; gap:8px;
@@ -170,13 +160,13 @@
   .banner .body{ flex:1; }
   .banner .headline{ font-weight:600; font-size:14px; margin-bottom:4px; }
   .banner ul{ margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:4px; }
-  .banner li{ font-size:13px; color: var(--ink-soft); display:flex; gap:8px; align-items:baseline; }
-  .banner li .tag{
+  .banner li, #reminderPopupList li{ font-size:13px; color: var(--ink-soft); display:flex; gap:8px; align-items:baseline; }
+  .banner li .tag, #reminderPopupList li .tag{
     font-family:"IBM Plex Mono", monospace; font-size:11px; padding:1px 6px; border-radius:5px;
   }
-  .banner li .tag.overdue{ background: var(--high-soft); color: var(--high-text); }
-  .banner li .tag.soon{ background: var(--med-soft); color: var(--med-text); }
-  .banner li b{ color: var(--ink); font-weight:600; }
+  .banner li .tag.overdue, #reminderPopupList li .tag.overdue{ background: var(--high-soft); color: var(--high-text); }
+  .banner li .tag.soon, #reminderPopupList li .tag.soon{ background: var(--med-soft); color: var(--med-text); }
+  .banner li b, #reminderPopupList li b{ color: var(--ink); font-weight:600; }
 
   /* ---------- board ---------- */
   .board{ display:grid; grid-template-columns: repeat(3, 1fr); gap:18px; align-items:start; }
@@ -244,6 +234,15 @@
   .mgr-table td{ padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; color: var(--ink); }
   .mgr-table tr:last-child td{ border-bottom:none; }
   .mgr-table tr.done td{ color: var(--ink-faint); }
+  .inline-edit{
+    font: inherit; font-size:12.5px; color: var(--ink); background: var(--surface);
+    border:1px solid var(--border); border-radius:6px; padding:5px 7px; width:100%;
+    min-width:90px; resize: vertical;
+  }
+  .inline-edit:focus{ outline:none; border-color: var(--accent); }
+  select.inline-edit{ min-width:96px; }
+  input[type="date"].inline-edit{ min-width:130px; }
+  textarea.inline-edit{ min-width:150px; font-family: inherit; }
   a.xl-link{
     font-size:12px; color: var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:5px;
     border:1px solid var(--border); padding:3px 9px; border-radius:20px; background: var(--surface-2);
@@ -254,6 +253,19 @@
     padding:8px 10px; white-space: pre-wrap; word-break: break-word;
   }
   .card-notes b{ color: var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
+  .card-staff-actions{ display:flex; gap:8px; }
+  .btn-extension{
+    font: inherit; font-weight:600; font-size:12.5px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background: var(--med-soft); color: var(--med-text); border:1px solid color-mix(in srgb, var(--med) 55%, var(--border));
+    border-radius:8px; padding:8px 10px; width:100%;
+  }
+  .btn-extension:hover{ filter:brightness(0.97); }
+  .btn-extension-info{
+    background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  }
+  .card-remark{ background: var(--accent-soft); }
+  .card-remark b{ color: var(--accent); }
 
   /* ---------- modal ---------- */
   .overlay{
@@ -350,7 +362,7 @@
     <div style="overflow:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--shadow);">
       <table class="mgr-table">
         <thead>
-          <tr><th>#</th><th>Date assigned</th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Document link</th><th>Manager notes</th><th></th></tr>
+          <tr><th>#</th><th>Date assigned</th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Document link</th><th>Manager notes</th><th>Rhea's remarks</th><th></th></tr>
         </thead>
         <tbody id="mgrPageBody"></tbody>
       </table>
@@ -442,6 +454,51 @@
   </div>
 </div>
 
+<div id="extensionOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <button type="button" class="btn-icon modal-close" id="extensionClose">✕</button>
+    <h3>Request extension</h3>
+    <div class="field">
+      <label>Requested new deadline</label>
+      <input id="extensionDeadline" type="date">
+    </div>
+    <div class="field">
+      <label>Reason</label>
+      <textarea id="extensionReason" rows="4" placeholder="Explain why more time is needed…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="extensionCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="extensionConfirm">Send request</button>
+    </div>
+  </div>
+</div>
+
+<div id="remarkOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <button type="button" class="btn-icon modal-close" id="remarkClose">✕</button>
+    <h3>Add remark</h3>
+    <div class="field">
+      <label>Progress update or remark</label>
+      <textarea id="remarkText" rows="4" placeholder="e.g. Waiting on artwork approval from the vendor…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="remarkCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="remarkConfirm">Add remark</button>
+    </div>
+  </div>
+</div>
+
+<div id="reminderPopupOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:540px;">
+    <button type="button" class="btn-icon modal-close" id="reminderPopupClose">✕</button>
+    <h3 id="reminderPopupHeadline" style="padding-right:32px; font-size:20px;">Reminder</h3>
+    <ul id="reminderPopupList" class="banner-list" style="margin:14px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px; max-height:360px; overflow-y:auto; font-size:15px;"></ul>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-primary" id="reminderPopupOk">Got it</button>
+    </div>
+  </div>
+</div>
+
 <div id="historyOverlay" class="overlay" style="display:none;">
   <div class="modal" style="max-width:440px;">
     <button type="button" class="btn-icon modal-close" id="historyClose">✕</button>
@@ -513,11 +570,6 @@
     }
   }catch(e){ emailjsReady = false; }
 
-  function isoInDays(n){
-    var d = new Date();
-    d.setDate(d.getDate() + n);
-    return d.toISOString().slice(0,10);
-  }
   function nowIso(){ return new Date().toISOString(); }
   function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
 
@@ -604,12 +656,53 @@
 
     renderBanner();
     renderBoard();
+
+    if(dataLoadedOnce) maybeShowReminderPopup();
   }
 
-  function renderBanner(){
+  function getOverdueAndSoon(){
     var open = state.tasks.filter(function(t){ return t.status === "open"; });
     var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0; });
     var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 7; });
+    return { overdue: overdue, soon: soon };
+  }
+  function reminderListItemsHtml(items){
+    return items.map(function(t){
+      var d = daysUntil(t.deadline);
+      var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
+      var mgr = managerById(t.managerId);
+      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.region) : "unassigned") + "</span></li>";
+    }).join("");
+  }
+
+  var reminderPopupShown = false;
+  var dataLoadedOnce = false;
+  function maybeShowReminderPopup(){
+    if(reminderPopupShown) return;
+    if(getRole() !== "staff") return;
+    reminderPopupShown = true;
+    var r = getOverdueAndSoon();
+    var headline = document.getElementById("reminderPopupHeadline");
+    var list = document.getElementById("reminderPopupList");
+    if(r.overdue.length === 0 && r.soon.length === 0){
+      headline.textContent = "✅ All caught up";
+      list.innerHTML = '<li style="color:var(--ink-faint);">Nothing overdue or due within 7 days.</li>';
+    } else {
+      var parts = [];
+      if(r.overdue.length) parts.push(r.overdue.length + " overdue");
+      if(r.soon.length) parts.push(r.soon.length + " due within 7 days");
+      headline.textContent = "⏰ Reminder — " + parts.join(" · ");
+      list.innerHTML = reminderListItemsHtml(r.overdue.concat(r.soon).slice(0, 8));
+    }
+    document.getElementById("reminderPopupOverlay").style.display = "flex";
+  }
+  function closeReminderPopup(){
+    document.getElementById("reminderPopupOverlay").style.display = "none";
+  }
+
+  function renderBanner(){
+    var r = getOverdueAndSoon();
+    var overdue = r.overdue, soon = r.soon;
     var banner = document.getElementById("reminderBanner");
     var flag = document.getElementById("bannerFlag");
     var headline = document.getElementById("bannerHeadline");
@@ -631,13 +724,7 @@
     if(soon.length) parts.push(soon.length + " due within 7 days");
     headline.textContent = "Reminder — " + parts.join(" · ");
 
-    var items = overdue.concat(soon).slice(0, 8);
-    list.innerHTML = items.map(function(t){
-      var d = daysUntil(t.deadline);
-      var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
-      var mgr = managerById(t.managerId);
-      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.region) : "unassigned") + "</span></li>";
-    }).join("");
+    list.innerHTML = reminderListItemsHtml(overdue.concat(soon).slice(0, 8));
   }
 
   function renderBoard(){
@@ -648,6 +735,9 @@
         return true;
       }).sort(function(a,b){
         if(a.status !== b.status) return a.status === "done" ? 1 : -1;
+        var aDaily = a.recurring === "daily" ? 0 : 1;
+        var bDaily = b.recurring === "daily" ? 0 : 1;
+        if(aDaily !== bDaily) return aDaily - bDaily;
         if(!a.deadline && !b.deadline) return 0;
         if(!a.deadline) return 1;
         if(!b.deadline) return -1;
@@ -715,12 +805,14 @@
 
     card.appendChild(row1);
 
+    var pendingExt = pendingExtension(t);
     var meta = document.createElement("div");
     meta.className = "meta-row";
     meta.innerHTML =
       '<span class="pill deadline ' + deadlineClass + '">Deadline: ' + fmtDate(t.deadline) + '</span>' +
       (mgr ? '<span class="pill manager">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
-      (t.recurring !== "none" ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
+      ((t.recurring && t.recurring !== "none") ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
+      (pendingExt ? '<span class="pill recurring" title="' + escapeAttr(pendingExt.reason || "") + '">⏳ Extension requested' + (pendingExt.requestedDeadline ? " → " + fmtDate(pendingExt.requestedDeadline) : "") + '</span>' : '') +
       (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Document</a>' : '');
     card.appendChild(meta);
 
@@ -729,6 +821,38 @@
       notes.className = "card-notes";
       notes.innerHTML = "<b>Manager notes</b>" + escapeHtml(t.notes);
       card.appendChild(notes);
+    }
+
+    var lastRemark = latestRemark(t);
+    if(lastRemark){
+      var remarkBlock = document.createElement("div");
+      remarkBlock.className = "card-notes card-remark";
+      remarkBlock.innerHTML = "<b>" + escapeHtml(lastRemark.by || "Remark") + "'s update — " + fmtAssignedDate(lastRemark.at) + "</b>" + escapeHtml(lastRemark.text);
+      card.appendChild(remarkBlock);
+    }
+
+    var isStaff = getRole() === "staff";
+    if(isStaff){
+      var actionsRow = document.createElement("div");
+      actionsRow.className = "card-staff-actions";
+
+      var remarkBtn = document.createElement("button");
+      remarkBtn.type = "button";
+      remarkBtn.className = "btn-extension btn-extension-info";
+      remarkBtn.innerHTML = "💬 Add remark";
+      remarkBtn.addEventListener("click", function(){ openRemark(t); });
+      actionsRow.appendChild(remarkBtn);
+
+      if(t.status === "open" && !pendingExt){
+        var extBtn = document.createElement("button");
+        extBtn.type = "button";
+        extBtn.className = "btn-extension";
+        extBtn.innerHTML = "⏳ Request more time";
+        extBtn.addEventListener("click", function(){ openExtension(t); });
+        actionsRow.appendChild(extBtn);
+      }
+
+      card.appendChild(actionsRow);
     }
 
     return card;
@@ -836,6 +960,9 @@
     if(ev.type === "completed") return "Completed";
     if(ev.type === "sent_back") return "Sent back" + (ev.by ? " by " + ev.by : "") + (ev.reason ? ": " + ev.reason : "");
     if(ev.type === "reopened") return "Reopened";
+    if(ev.type === "extension_requested") return "Extension requested" + (ev.requestedDeadline ? " — new deadline: " + fmtDate(ev.requestedDeadline) : "") + (ev.reason ? ": " + ev.reason : "");
+    if(ev.type === "extension_reviewed") return "Deadline updated to " + fmtDate(ev.newDeadline);
+    if(ev.type === "remark") return (ev.by ? ev.by + ": " : "") + ev.text;
     return ev.type;
   }
   function historyIcon(ev){
@@ -843,7 +970,22 @@
     if(ev.type === "completed") return "✅";
     if(ev.type === "sent_back") return "⤺";
     if(ev.type === "reopened") return "↺";
+    if(ev.type === "extension_requested") return "⏳";
+    if(ev.type === "extension_reviewed") return "📅";
+    if(ev.type === "remark") return "💬";
     return "•";
+  }
+  function latestRemark(t){
+    if(!Array.isArray(t.history)) return null;
+    for(var i = t.history.length - 1; i >= 0; i--){
+      if(t.history[i].type === "remark") return t.history[i];
+    }
+    return null;
+  }
+  function pendingExtension(t){
+    if(t.status !== "open" || !Array.isArray(t.history) || !t.history.length) return null;
+    var last = t.history[t.history.length - 1];
+    return last.type === "extension_requested" ? last : null;
   }
   function renderHistoryList(t){
     var events = Array.isArray(t.history) ? t.history : [];
@@ -867,6 +1009,75 @@
   function closeHistory(){
     document.getElementById("historyOverlay").style.display = "none";
     historyTaskId = null;
+  }
+
+  var extensionTaskId = null;
+  function openExtension(t){
+    extensionTaskId = t.id;
+    document.getElementById("extensionDeadline").value = t.deadline || "";
+    document.getElementById("extensionReason").value = "";
+    document.getElementById("extensionOverlay").style.display = "flex";
+  }
+  function closeExtension(){
+    document.getElementById("extensionOverlay").style.display = "none";
+    extensionTaskId = null;
+  }
+  function confirmExtension(){
+    var t = state.tasks.find(function(x){ return x.id === extensionTaskId; });
+    if(!t){ closeExtension(); return; }
+    var requestedDeadline = document.getElementById("extensionDeadline").value;
+    var reason = document.getElementById("extensionReason").value.trim();
+    if(!reason){ document.getElementById("extensionReason").focus(); return; }
+
+    pushHistory(t, { type:"extension_requested", by: state.config.staffName, requestedDeadline: requestedDeadline, reason: reason });
+    persistTask(t);
+
+    var mgr = managerById(t.managerId);
+    if(mgr && mgr.email){
+      var subject = "Extension requested: " + t.title;
+      var bodyLines = [
+        "Hi " + mgr.name + ",",
+        "",
+        state.config.staffName + " has requested more time on the following task:",
+        "",
+        "Task: " + t.title,
+        "Current deadline: " + fmtDate(t.deadline),
+        requestedDeadline ? "Requested new deadline: " + fmtDate(requestedDeadline) : "",
+        "Reason: " + reason,
+        "",
+        "Thank you",
+        "Regards,",
+        state.config.staffName
+      ].filter(Boolean);
+      sendNotification({ to: mgr.email, subject: subject, body: bodyLines.join("\n") });
+    }
+
+    closeExtension();
+    render();
+  }
+
+  var remarkTaskId = null;
+  function openRemark(t){
+    remarkTaskId = t.id;
+    document.getElementById("remarkText").value = "";
+    document.getElementById("remarkOverlay").style.display = "flex";
+  }
+  function closeRemark(){
+    document.getElementById("remarkOverlay").style.display = "none";
+    remarkTaskId = null;
+  }
+  function confirmRemark(){
+    var t = state.tasks.find(function(x){ return x.id === remarkTaskId; });
+    if(!t){ closeRemark(); return; }
+    var text = document.getElementById("remarkText").value.trim();
+    if(!text){ document.getElementById("remarkText").focus(); return; }
+
+    pushHistory(t, { type:"remark", by: state.config.staffName, text: text });
+    persistTask(t);
+
+    closeRemark();
+    render();
+    showEmailToast("Remark added");
   }
 
   // ---------- actions ----------
@@ -972,13 +1183,25 @@
     render();
   }
 
+  // Tracks tasks this tab wrote very recently, so a Supabase poll that's still
+  // catching up (replication/response lag) doesn't briefly clobber a local
+  // change — e.g. a "Mark complete" or "Send back" appearing to undo itself
+  // until the next poll cycle.
+  var recentLocalWrites = {};
+  var RECENT_WRITE_GUARD_MS = 12000;
+  function markRecentWrite(id){ recentLocalWrites[id] = Date.now(); }
+
   function persistTask(t){
     if(tasksCol){
       tasksCol.doc(t.id).set(t).catch(function(){ /* offline: kept locally */ });
       return;
     }
     if(supabaseEnabled()){
-      supabaseUpsert("tasks", t).catch(function(){});
+      markRecentWrite(t.id);
+      supabaseUpsert("tasks", t).catch(function(err){
+        console.error(err);
+        showEmailToast("⚠️ Couldn't save — " + err.message);
+      });
     }
   }
   function deleteTaskRemote(id){
@@ -987,7 +1210,11 @@
       return;
     }
     if(supabaseEnabled()){
-      supabaseDelete("tasks", id).catch(function(){});
+      delete recentLocalWrites[id];
+      supabaseDelete("tasks", id).catch(function(err){
+        console.error(err);
+        showEmailToast("⚠️ Couldn't delete — " + err.message);
+      });
     }
   }
   function persistConfig(){
@@ -997,7 +1224,10 @@
     }
     if(supabaseEnabled()){
       state.config.managers.forEach(function(m){
-        supabaseUpsert("managers", m).catch(function(){});
+        supabaseUpsert("managers", m).catch(function(err){
+          console.error(err);
+          showEmailToast("⚠️ Couldn't save settings — " + err.message);
+        });
       });
     }
   }
@@ -1021,6 +1251,13 @@
       method: "POST",
       headers: supabaseHeaders({ "Prefer": "resolution=merge-duplicates,return=minimal" }),
       body: JSON.stringify(record)
+    }).then(function(r){
+      if(!r.ok){
+        return r.text().then(function(msg){
+          throw new Error("Save failed (" + r.status + "): " + (msg || "check your Supabase table columns"));
+        });
+      }
+      return r;
     });
   }
 
@@ -1028,7 +1265,37 @@
     return fetch(SUPABASE_URL + "/rest/v1/" + table + "?id=eq." + encodeURIComponent(id), {
       method: "DELETE",
       headers: supabaseHeaders({ "Prefer": "return=minimal" })
+    }).then(function(r){
+      if(!r.ok){
+        return r.text().then(function(msg){
+          throw new Error("Delete failed (" + r.status + "): " + (msg || "check your Supabase table"));
+        });
+      }
+      return r;
     });
+  }
+
+  function mergeIncomingTasks(incoming){
+    var now = Date.now();
+    var isRecent = function(id){ return recentLocalWrites[id] && (now - recentLocalWrites[id]) < RECENT_WRITE_GUARD_MS; };
+    var localById = {};
+    state.tasks.forEach(function(t){ localById[t.id] = t; });
+
+    var merged = incoming.map(function(ft){
+      if(isRecent(ft.id) && localById[ft.id]) return localById[ft.id];
+      return ft;
+    });
+    // Keep very-recently-created local tasks the poll hasn't picked up yet.
+    state.tasks.forEach(function(lt){
+      if(isRecent(lt.id) && !merged.some(function(m){ return m.id === lt.id; })){
+        merged.push(lt);
+      }
+    });
+    // Once a write ages out of the guard window, stop tracking it.
+    Object.keys(recentLocalWrites).forEach(function(id){
+      if(!isRecent(id)) delete recentLocalWrites[id];
+    });
+    return merged;
   }
 
   function supabaseLoad(){
@@ -1037,9 +1304,10 @@
       fetch(SUPABASE_URL + "/rest/v1/managers?select=*", { headers: supabaseHeaders() }).then(function(r){ return r.json(); })
     ]).then(function(results){
       var tasks = results[0], managers = results[1];
-      if(Array.isArray(tasks)) state.tasks = tasks;
+      if(Array.isArray(tasks)) state.tasks = mergeIncomingTasks(tasks);
       if(Array.isArray(managers) && managers.length) state.config.managers = managers;
       state.connected = true;
+      dataLoadedOnce = true;
       render();
     }).catch(function(){
       state.connected = false;
@@ -1094,7 +1362,11 @@
     if(state.editingTaskId){
       var existing = state.tasks.filter(function(t){ return t.id === state.editingTaskId; })[0];
       if(existing){
+        var hadPendingExt = pendingExtension(existing);
         Object.assign(existing, data);
+        if(hadPendingExt){
+          pushHistory(existing, { type:"extension_reviewed", newDeadline: existing.deadline });
+        }
         persistTask(existing);
       }
     } else {
@@ -1168,22 +1440,125 @@
     var body = document.getElementById("mgrPageBody");
     body.innerHTML = "";
     if(!tasks.length){
-      body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--ink-faint); padding:24px;">No tasks for this manager yet</td></tr>';
+      body.innerHTML = '<tr><td colspan="10" style="text-align:center; color:var(--ink-faint); padding:24px;">No tasks for this manager yet</td></tr>';
       return;
     }
     var isStaff = getRole() === "staff";
+
+    function afterFieldEdit(t){
+      persistTask(t);
+      render();
+    }
+
     tasks.forEach(function(t, idx){
       var tr = document.createElement("tr");
       if(t.status === "done") tr.className = "done";
+
       tr.innerHTML =
         '<td>' + (idx + 1) + '</td>' +
-        '<td>' + fmtAssignedDate(t.createdAt) + '</td>' +
-        '<td>' + escapeHtml(t.title) + (t.recurring !== "none" ? ' <span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') + '</td>' +
-        '<td><span class="pill pri-' + t.priority + '">' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + '</span></td>' +
-        '<td>' + fmtDate(t.deadline) + '</td>' +
-        '<td>' + (t.status === "done" ? '<span class="pill status-done">✓ Completed</span>' : '<span class="pill status-open">Open</span>') + '</td>' +
-        '<td>' + (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—') + '</td>' +
-        '<td>' + (t.notes ? escapeHtml(t.notes) : '—') + '</td>';
+        '<td>' + fmtAssignedDate(t.createdAt) + '</td>';
+
+      var titleTd = document.createElement("td");
+      var recurPillHtml = (t.recurring && t.recurring !== "none") ? ' <span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '';
+      if(isStaff){
+        titleTd.innerHTML = escapeHtml(t.title) + recurPillHtml;
+      } else {
+        var titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.className = "inline-edit";
+        titleInput.value = t.title || "";
+        titleInput.addEventListener("blur", function(){
+          var v = titleInput.value.trim();
+          if(v && v !== t.title){ t.title = v; afterFieldEdit(t); }
+          else if(!v){ titleInput.value = t.title; }
+        });
+        titleTd.appendChild(titleInput);
+        if(recurPillHtml){
+          var recurSpan = document.createElement("span");
+          recurSpan.innerHTML = recurPillHtml;
+          recurSpan.style.display = "inline-block";
+          recurSpan.style.marginTop = "4px";
+          titleTd.appendChild(recurSpan);
+        }
+      }
+      tr.appendChild(titleTd);
+
+      var priTd = document.createElement("td");
+      if(isStaff){
+        priTd.innerHTML = '<span class="pill pri-' + t.priority + '">' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + '</span>';
+      } else {
+        var priSelect = document.createElement("select");
+        priSelect.className = "inline-edit";
+        ["high","medium","low"].forEach(function(p){
+          var opt = document.createElement("option");
+          opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+          if(t.priority === p) opt.selected = true;
+          priSelect.appendChild(opt);
+        });
+        priSelect.addEventListener("change", function(){ t.priority = priSelect.value; afterFieldEdit(t); });
+        priTd.appendChild(priSelect);
+      }
+      tr.appendChild(priTd);
+
+      var deadlineTd = document.createElement("td");
+      if(isStaff){
+        deadlineTd.textContent = fmtDate(t.deadline);
+      } else {
+        var deadlineInput = document.createElement("input");
+        deadlineInput.type = "date";
+        deadlineInput.className = "inline-edit";
+        deadlineInput.value = t.deadline || "";
+        deadlineInput.addEventListener("change", function(){ t.deadline = deadlineInput.value; afterFieldEdit(t); });
+        deadlineTd.appendChild(deadlineInput);
+      }
+      tr.appendChild(deadlineTd);
+
+      var statusTd = document.createElement("td");
+      statusTd.innerHTML = t.status === "done" ? '<span class="pill status-done">✓ Completed</span>' : '<span class="pill status-open">Open</span>';
+      tr.appendChild(statusTd);
+
+      var linkTd = document.createElement("td");
+      if(isStaff){
+        linkTd.innerHTML = t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—';
+      } else {
+        var linkInput = document.createElement("input");
+        linkInput.type = "text";
+        linkInput.className = "inline-edit";
+        linkInput.placeholder = "Paste link…";
+        linkInput.value = t.excelLink || "";
+        linkInput.addEventListener("blur", function(){
+          if(linkInput.value.trim() !== (t.excelLink || "")){ t.excelLink = linkInput.value.trim(); afterFieldEdit(t); }
+        });
+        linkTd.appendChild(linkInput);
+      }
+      tr.appendChild(linkTd);
+
+      var notesTd = document.createElement("td");
+      if(isStaff){
+        notesTd.textContent = t.notes || "—";
+      } else {
+        var notesInput = document.createElement("textarea");
+        notesInput.className = "inline-edit";
+        notesInput.rows = 1;
+        notesInput.placeholder = "Add a note…";
+        notesInput.value = t.notes || "";
+        notesInput.addEventListener("blur", function(){
+          if(notesInput.value.trim() !== (t.notes || "")){ t.notes = notesInput.value.trim(); afterFieldEdit(t); }
+        });
+        notesTd.appendChild(notesInput);
+      }
+      tr.appendChild(notesTd);
+
+      var remarkTd = document.createElement("td");
+      var rowLastRemark = latestRemark(t);
+      if(rowLastRemark){
+        remarkTd.innerHTML = "<b style=\"display:block; font-size:11px; color:var(--ink-faint); margin-bottom:2px;\">" +
+          escapeHtml(rowLastRemark.by || "") + " · " + fmtAssignedDate(rowLastRemark.at) + "</b>" + escapeHtml(rowLastRemark.text);
+      } else {
+        remarkTd.textContent = "—";
+      }
+      tr.appendChild(remarkTd);
+
       var actionTd = document.createElement("td");
       actionTd.style.whiteSpace = "nowrap";
       var histBtn = document.createElement("button");
@@ -1210,6 +1585,26 @@
   document.getElementById("throwbackConfirm").addEventListener("click", confirmThrowback);
   document.getElementById("throwbackOverlay").addEventListener("click", function(e){
     if(e.target === document.getElementById("throwbackOverlay")) closeThrowback();
+  });
+
+  document.getElementById("extensionClose").addEventListener("click", closeExtension);
+  document.getElementById("extensionCancel").addEventListener("click", closeExtension);
+  document.getElementById("extensionConfirm").addEventListener("click", confirmExtension);
+  document.getElementById("extensionOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("extensionOverlay")) closeExtension();
+  });
+
+  document.getElementById("remarkClose").addEventListener("click", closeRemark);
+  document.getElementById("remarkCancel").addEventListener("click", closeRemark);
+  document.getElementById("remarkConfirm").addEventListener("click", confirmRemark);
+  document.getElementById("remarkOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("remarkOverlay")) closeRemark();
+  });
+
+  document.getElementById("reminderPopupClose").addEventListener("click", closeReminderPopup);
+  document.getElementById("reminderPopupOk").addEventListener("click", closeReminderPopup);
+  document.getElementById("reminderPopupOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("reminderPopupOverlay")) closeReminderPopup();
   });
 
   document.getElementById("historyClose").addEventListener("click", closeHistory);
@@ -1258,23 +1653,17 @@
   settingsOverlay.addEventListener("click", function(e){ if(e.target === settingsOverlay) settingsOverlay.style.display = "none"; });
 
   document.getElementById("settingsSaveBtn").addEventListener("click", function(){
-    try{
-      state.config.staffEmail = document.getElementById("settingsStaffEmail").value.trim();
-      var inputs = document.getElementById("settingsManagers").querySelectorAll("input");
-      inputs.forEach(function(inp){
-        var idx = Number(inp.getAttribute("data-idx"));
-        var k = inp.getAttribute("data-k");
-        if(state.config.managers[idx]) state.config.managers[idx][k] = inp.value.trim();
-      });
-      persistConfig();
-      settingsOverlay.style.display = "none";
-      render();
-    }catch(err){
-      console.error("Settings save failed:", err);
-      alert("Couldn't save settings: " + err.message);
-    }
+    state.config.staffEmail = document.getElementById("settingsStaffEmail").value.trim();
+    var inputs = document.getElementById("settingsManagers").querySelectorAll("input");
+    inputs.forEach(function(inp){
+      var idx = Number(inp.getAttribute("data-idx"));
+      var k = inp.getAttribute("data-k");
+      if(state.config.managers[idx]) state.config.managers[idx][k] = inp.value.trim();
+    });
+    persistConfig();
+    settingsOverlay.style.display = "none";
+    render();
   });
-
 
   document.getElementById("showDoneToggle").addEventListener("change", function(){
     state.showDone = this.checked;
@@ -1329,6 +1718,7 @@
         state.tasks = qsnap.docs.map(function(d){ return d.data(); });
       }
       state.connected = true;
+      dataLoadedOnce = true;
       render();
     }, function(){ state.connected = false; render(); });
 
