@@ -32,6 +32,17 @@
 
     --done: #8891ab;
     --shadow: 0 1px 2px rgba(48,60,108,.08), 0 4px 14px rgba(48,60,108,.08);
+
+    /* Per-manager colour coding */
+    --mgr-purple: #8b5cf6;
+    --mgr-purple-text: #6d28d9;
+    --mgr-purple-soft: #ede4fe;
+    --mgr-blue: #4a8fe0;
+    --mgr-blue-text: #1d5fac;
+    --mgr-blue-soft: #dfeafd;
+    --mgr-orange: #f0973d;
+    --mgr-orange-text: #b5651a;
+    --mgr-orange-soft: #ffe9d2;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -61,6 +72,16 @@
 
       --done: #7c85a3;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+
+      --mgr-purple: #a78bfa;
+      --mgr-purple-text: #c4b5fd;
+      --mgr-purple-soft: #302150;
+      --mgr-blue: #7db4f0;
+      --mgr-blue-text: #a9cff7;
+      --mgr-blue-soft: #1c2f4a;
+      --mgr-orange: #f5a862;
+      --mgr-orange-text: #f8c690;
+      --mgr-orange-soft: #3d2a15;
     }
   }
   :root[data-theme="dark"]{
@@ -90,6 +111,16 @@
 
     --done: #7c85a3;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+
+    --mgr-purple: #a78bfa;
+    --mgr-purple-text: #c4b5fd;
+    --mgr-purple-soft: #302150;
+    --mgr-blue: #7db4f0;
+    --mgr-blue-text: #a9cff7;
+    --mgr-blue-soft: #1c2f4a;
+    --mgr-orange: #f5a862;
+    --mgr-orange-text: #f8c690;
+    --mgr-orange-soft: #3d2a15;
   }
 
   *{ box-sizing: border-box; }
@@ -132,6 +163,19 @@
   .mgr-chip:hover{ border-color: var(--accent); }
   .mgr-dot{ width:8px; height:8px; border-radius:50%; background: var(--accent); flex:none; }
   .mgr-meta .mgr-name{ font-weight:600; font-size:16px; }
+  .mgr-name-c{ font-weight:600; font-size:16px; }
+  .mgr-c-purple .mgr-dot, .mgr-dot.mgr-c-purple{ background: var(--mgr-purple); }
+  .mgr-c-blue .mgr-dot, .mgr-dot.mgr-c-blue{ background: var(--mgr-blue); }
+  .mgr-c-orange .mgr-dot, .mgr-dot.mgr-c-orange{ background: var(--mgr-orange); }
+  .mgr-c-purple .mgr-name-c, .mgr-name-c.mgr-c-purple{ color: var(--mgr-purple-text); }
+  .mgr-c-blue .mgr-name-c, .mgr-name-c.mgr-c-blue{ color: var(--mgr-blue-text); }
+  .mgr-c-orange .mgr-name-c, .mgr-name-c.mgr-c-orange{ color: var(--mgr-orange-text); }
+  .mgr-chip.mgr-c-purple{ border-color: color-mix(in srgb, var(--mgr-purple) 45%, var(--border)); }
+  .mgr-chip.mgr-c-blue{ border-color: color-mix(in srgb, var(--mgr-blue) 45%, var(--border)); }
+  .mgr-chip.mgr-c-orange{ border-color: color-mix(in srgb, var(--mgr-orange) 45%, var(--border)); }
+  .pill.manager.mgr-c-purple{ background: var(--surface); color: var(--mgr-purple-text); border:1px solid color-mix(in srgb, var(--mgr-purple) 55%, var(--border)); }
+  .pill.manager.mgr-c-blue{ background: var(--surface); color: var(--mgr-blue-text); border:1px solid color-mix(in srgb, var(--mgr-blue) 55%, var(--border)); }
+  .pill.manager.mgr-c-orange{ background: var(--surface); color: var(--mgr-orange-text); border:1px solid color-mix(in srgb, var(--mgr-orange) 55%, var(--border)); }
 
   .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   button.btn, .btn-icon, .checkbox{ touch-action: manipulation; }
@@ -198,6 +242,9 @@
   .col.med .card{ border-left-color: var(--med); }
   .col.low .card{ border-left-color: var(--low); }
   .card.done{ opacity:.6; border-left-color: var(--border); }
+  .card.mgr-c-purple{ background: var(--mgr-purple-soft); }
+  .card.mgr-c-blue{ background: var(--mgr-blue-soft); }
+  .card.mgr-c-orange{ background: var(--mgr-orange-soft); }
   .card .row1{ display:flex; align-items:flex-start; gap:9px; }
   .checkbox{
     width:18px; height:18px; border-radius:5px; border:1.5px solid var(--ink-faint);
@@ -225,6 +272,20 @@
   .pill.pri-low{ background: var(--low); color: var(--chip-ink); font-weight:600; }
   .pill.status-done{ background: var(--low-soft); color: var(--low-text); }
   .pill.status-open{ background: var(--surface-2); color: var(--ink-soft); }
+  .pill.progress-not_started{ background: var(--surface-2); color: var(--ink-soft); }
+  .pill.progress-in_progress{ background: var(--accent-soft); color: var(--accent); font-weight:600; }
+  .pill.progress-pending{ background: var(--med-soft); color: var(--med-text); font-weight:600; }
+  .pill.progress-completed{ background: var(--low-soft); color: var(--low-text); font-weight:600; }
+  select.progress-select{
+    font: inherit; font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:600; cursor:pointer;
+    border-radius:20px; border:1px solid transparent; padding:2px 22px 2px 8px;
+    appearance:none; -webkit-appearance:none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%238891ab' d='M2.5 4.5l3.5 3 3.5-3z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position: right 6px center;
+  }
+  select.progress-select.progress-not_started{ background-color: var(--surface-2); color: var(--ink-soft); }
+  select.progress-select.progress-in_progress{ background-color: var(--accent-soft); color: var(--accent); }
+  select.progress-select.progress-pending{ background-color: var(--med-soft); color: var(--med-text); }
 
   .mgr-table{ width:100%; border-collapse:collapse; font-size:13px; }
   .mgr-table th{
@@ -253,6 +314,7 @@
     padding:8px 10px; white-space: pre-wrap; word-break: break-word;
   }
   .card-notes b{ color: var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
+  .card-staff-actions{ display:flex; gap:8px; }
   .btn-extension{
     font: inherit; font-weight:600; font-size:12.5px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; gap:6px;
@@ -260,6 +322,11 @@
     border-radius:8px; padding:8px 10px; width:100%;
   }
   .btn-extension:hover{ filter:brightness(0.97); }
+  .btn-extension-info{
+    background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  }
+  .card-remark{ background: var(--accent-soft); }
+  .card-remark b{ color: var(--accent); }
 
   /* ---------- modal ---------- */
   .overlay{
@@ -356,7 +423,7 @@
     <div style="overflow:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--shadow);">
       <table class="mgr-table">
         <thead>
-          <tr><th>#</th><th>Date assigned</th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Document link</th><th>Manager notes</th><th></th></tr>
+          <tr><th>#</th><th>Date assigned</th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th>Document link</th><th>Manager notes</th><th>Rhea's remarks</th><th></th></tr>
         </thead>
         <tbody id="mgrPageBody"></tbody>
       </table>
@@ -467,6 +534,21 @@
   </div>
 </div>
 
+<div id="remarkOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:420px;">
+    <button type="button" class="btn-icon modal-close" id="remarkClose">✕</button>
+    <h3>Add remark</h3>
+    <div class="field">
+      <label>Progress update or remark</label>
+      <textarea id="remarkText" rows="4" placeholder="e.g. Waiting on artwork approval from the vendor…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="remarkCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="remarkConfirm">Add remark</button>
+    </div>
+  </div>
+</div>
+
 <div id="reminderPopupOverlay" class="overlay" style="display:none;">
   <div class="modal" style="max-width:540px;">
     <button type="button" class="btn-icon modal-close" id="reminderPopupClose">✕</button>
@@ -520,7 +602,7 @@
 
   var DEFAULT_STATE = {
     staffName: "Rhea Tan",
-    staffEmail: "",
+    staffEmail: "nyenquiry@hericoll.com",
     managers: [
       { id:"m1", name:"Jonia", region:"New York",   tz:"America/New_York", email:"nysalesmgr@hericoll.com" },
       { id:"m2", name:"PK",    region:"Xian", tz:"Asia/Shanghai",    email:"pkchan@columbiainv.com" },
@@ -567,6 +649,20 @@
   function managerById(id){
     var m = state.config.managers.filter(function(x){ return x.id === id; })[0];
     return m || null;
+  }
+
+  var MANAGER_COLOR_PALETTE = ["purple", "blue", "orange"];
+  var MANAGER_COLOR_BY_ID = { m1: "purple", m2: "blue", m3: "orange" };
+  function managerColorKey(mgr){
+    if(!mgr) return "";
+    if(MANAGER_COLOR_BY_ID[mgr.id]) return MANAGER_COLOR_BY_ID[mgr.id];
+    var idx = state.config.managers.indexOf(mgr);
+    if(idx < 0) idx = 0;
+    return MANAGER_COLOR_PALETTE[idx % MANAGER_COLOR_PALETTE.length];
+  }
+  function managerColorClass(mgr){
+    var k = managerColorKey(mgr);
+    return k ? "mgr-c-" + k : "";
   }
 
   function fmtDate(iso){
@@ -623,10 +719,10 @@
     state.config.managers.forEach(function(m){
       var el = document.createElement("button");
       el.type = "button";
-      el.className = "mgr-chip";
+      el.className = "mgr-chip " + managerColorClass(m);
       el.title = "View all tasks for " + m.name;
       el.innerHTML = '<span class="mgr-dot"></span><div class="mgr-meta">' +
-        '<div class="mgr-name">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div></div>';
+        '<div class="mgr-name mgr-name-c">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div></div>';
       el.addEventListener("click", function(){ openManagerOverview(m.id); });
       chips.appendChild(el);
     });
@@ -743,7 +839,7 @@
     var d = daysUntil(t.deadline);
     var deadlineClass = (t.status === "done" || d === null) ? "" : (d < 0 ? "overdue" : (d <= 7 ? "soon" : ""));
     var card = document.createElement("div");
-    card.className = "card" + (t.status === "done" ? " done" : "");
+    card.className = "card" + (mgr ? " " + managerColorClass(mgr) : "") + (t.status === "done" ? " done" : "");
 
     var row1 = document.createElement("div");
     row1.className = "row1";
@@ -785,15 +881,44 @@
     card.appendChild(row1);
 
     var pendingExt = pendingExtension(t);
+    var effProg = effectiveProgress(t);
     var meta = document.createElement("div");
     meta.className = "meta-row";
     meta.innerHTML =
       '<span class="pill deadline ' + deadlineClass + '">Deadline: ' + fmtDate(t.deadline) + '</span>' +
-      (mgr ? '<span class="pill manager">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
+      (mgr ? '<span class="pill manager ' + managerColorClass(mgr) + '">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
       ((t.recurring && t.recurring !== "none") ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
       (pendingExt ? '<span class="pill recurring" title="' + escapeAttr(pendingExt.reason || "") + '">⏳ Extension requested' + (pendingExt.requestedDeadline ? " → " + fmtDate(pendingExt.requestedDeadline) : "") + '</span>' : '') +
       (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Document</a>' : '');
     card.appendChild(meta);
+
+    var isStaff = getRole() === "staff";
+    if(t.status === "open" && isStaff){
+      var progressRow = document.createElement("div");
+      progressRow.className = "meta-row";
+      var progressSelect = document.createElement("select");
+      progressSelect.className = "progress-select progress-" + effProg;
+      PROGRESS_ORDER.forEach(function(key){
+        var opt = document.createElement("option");
+        opt.value = key; opt.textContent = progressLabel(key);
+        if(effProg === key) opt.selected = true;
+        progressSelect.appendChild(opt);
+      });
+      progressSelect.addEventListener("change", function(){
+        var oldVal = t.progress || "not_started";
+        t.progress = progressSelect.value;
+        if(t.progress !== oldVal) pushHistory(t, { type: "progress", value: t.progress });
+        persistTask(t);
+        render();
+      });
+      progressRow.appendChild(progressSelect);
+      card.appendChild(progressRow);
+    } else {
+      var progressPill = document.createElement("div");
+      progressPill.className = "meta-row";
+      progressPill.innerHTML = '<span class="pill progress-' + effProg + '">' + progressLabel(effProg) + '</span>';
+      card.appendChild(progressPill);
+    }
 
     if(t.notes){
       var notes = document.createElement("div");
@@ -802,13 +927,35 @@
       card.appendChild(notes);
     }
 
-    if(getRole() === "staff" && t.status === "open" && !pendingExt){
-      var extBtn = document.createElement("button");
-      extBtn.type = "button";
-      extBtn.className = "btn-extension";
-      extBtn.innerHTML = "⏳ Request more time";
-      extBtn.addEventListener("click", function(){ openExtension(t); });
-      card.appendChild(extBtn);
+    var lastRemark = latestRemark(t);
+    if(lastRemark){
+      var remarkBlock = document.createElement("div");
+      remarkBlock.className = "card-notes card-remark";
+      remarkBlock.innerHTML = "<b>" + escapeHtml(lastRemark.by || "Remark") + "'s update — " + fmtAssignedDate(lastRemark.at) + "</b>" + escapeHtml(lastRemark.text);
+      card.appendChild(remarkBlock);
+    }
+
+    if(isStaff){
+      var actionsRow = document.createElement("div");
+      actionsRow.className = "card-staff-actions";
+
+      var remarkBtn = document.createElement("button");
+      remarkBtn.type = "button";
+      remarkBtn.className = "btn-extension btn-extension-info";
+      remarkBtn.innerHTML = "💬 Add remark";
+      remarkBtn.addEventListener("click", function(){ openRemark(t); });
+      actionsRow.appendChild(remarkBtn);
+
+      if(t.status === "open" && !pendingExt){
+        var extBtn = document.createElement("button");
+        extBtn.type = "button";
+        extBtn.className = "btn-extension";
+        extBtn.innerHTML = "⏳ Request more time";
+        extBtn.addEventListener("click", function(){ openExtension(t); });
+        actionsRow.appendChild(extBtn);
+      }
+
+      card.appendChild(actionsRow);
     }
 
     return card;
@@ -918,6 +1065,8 @@
     if(ev.type === "reopened") return "Reopened";
     if(ev.type === "extension_requested") return "Extension requested" + (ev.requestedDeadline ? " — new deadline: " + fmtDate(ev.requestedDeadline) : "") + (ev.reason ? ": " + ev.reason : "");
     if(ev.type === "extension_reviewed") return "Deadline updated to " + fmtDate(ev.newDeadline);
+    if(ev.type === "remark") return (ev.by ? ev.by + ": " : "") + ev.text;
+    if(ev.type === "progress") return "Status set to " + progressLabel(ev.value);
     return ev.type;
   }
   function historyIcon(ev){
@@ -927,12 +1076,29 @@
     if(ev.type === "reopened") return "↺";
     if(ev.type === "extension_requested") return "⏳";
     if(ev.type === "extension_reviewed") return "📅";
+    if(ev.type === "remark") return "💬";
+    if(ev.type === "progress") return "🔄";
     return "•";
+  }
+  function latestRemark(t){
+    if(!Array.isArray(t.history)) return null;
+    for(var i = t.history.length - 1; i >= 0; i--){
+      if(t.history[i].type === "remark") return t.history[i];
+    }
+    return null;
   }
   function pendingExtension(t){
     if(t.status !== "open" || !Array.isArray(t.history) || !t.history.length) return null;
     var last = t.history[t.history.length - 1];
     return last.type === "extension_requested" ? last : null;
+  }
+
+  var PROGRESS_LABELS = { not_started: "Not started", in_progress: "In progress", pending: "Pending", completed: "Completed" };
+  var PROGRESS_ORDER = ["not_started", "in_progress", "pending"];
+  function progressLabel(key){ return PROGRESS_LABELS[key] || PROGRESS_LABELS.not_started; }
+  function effectiveProgress(t){
+    if(t.status === "done") return "completed";
+    return (t.progress && PROGRESS_LABELS[t.progress]) ? t.progress : "not_started";
   }
   function renderHistoryList(t){
     var events = Array.isArray(t.history) ? t.history : [];
@@ -1003,6 +1169,30 @@
     render();
   }
 
+  var remarkTaskId = null;
+  function openRemark(t){
+    remarkTaskId = t.id;
+    document.getElementById("remarkText").value = "";
+    document.getElementById("remarkOverlay").style.display = "flex";
+  }
+  function closeRemark(){
+    document.getElementById("remarkOverlay").style.display = "none";
+    remarkTaskId = null;
+  }
+  function confirmRemark(){
+    var t = state.tasks.find(function(x){ return x.id === remarkTaskId; });
+    if(!t){ closeRemark(); return; }
+    var text = document.getElementById("remarkText").value.trim();
+    if(!text){ document.getElementById("remarkText").focus(); return; }
+
+    pushHistory(t, { type:"remark", by: state.config.staffName, text: text });
+    persistTask(t);
+
+    closeRemark();
+    render();
+    showEmailToast("Remark added");
+  }
+
   // ---------- actions ----------
   function toggleComplete(t){
     if(t.status === "done"){
@@ -1050,6 +1240,7 @@
         recurring: t.recurring,
         managerId: t.managerId,
         status: "open",
+        progress: "not_started",
         createdAt: nextCreatedAt,
         history: [{ type:"created", at: nextCreatedAt }]
       };
@@ -1294,7 +1485,7 @@
       }
     } else {
       var createdAt = nowIso();
-      var t = Object.assign({ id: uid(), status:"open", createdAt: createdAt, history: [{ type:"created", at: createdAt }] }, data);
+      var t = Object.assign({ id: uid(), status:"open", progress:"not_started", createdAt: createdAt, history: [{ type:"created", at: createdAt }] }, data);
       state.tasks.push(t);
       persistTask(t);
     }
@@ -1351,7 +1542,9 @@
     if(!currentOverviewManagerId) return;
     var mgr = managerById(currentOverviewManagerId);
     if(!mgr){ showBoard(); return; }
-    document.getElementById("mgrPageTitle").textContent = mgr.region + " - All Task";
+    var pageTitleEl = document.getElementById("mgrPageTitle");
+    pageTitleEl.textContent = mgr.region + " - All Task";
+    pageTitleEl.className = "mgr-name-c " + managerColorClass(mgr);
 
     var tasks = state.tasks.filter(function(t){ return t.managerId === currentOverviewManagerId; })
       .slice()
@@ -1363,7 +1556,7 @@
     var body = document.getElementById("mgrPageBody");
     body.innerHTML = "";
     if(!tasks.length){
-      body.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--ink-faint); padding:24px;">No tasks for this manager yet</td></tr>';
+      body.innerHTML = '<tr><td colspan="10" style="text-align:center; color:var(--ink-faint); padding:24px;">No tasks for this manager yet</td></tr>';
       return;
     }
     var isStaff = getRole() === "staff";
@@ -1437,7 +1630,8 @@
       tr.appendChild(deadlineTd);
 
       var statusTd = document.createElement("td");
-      statusTd.innerHTML = t.status === "done" ? '<span class="pill status-done">✓ Completed</span>' : '<span class="pill status-open">Open</span>';
+      var rowProg = effectiveProgress(t);
+      statusTd.innerHTML = '<span class="pill progress-' + rowProg + '">' + progressLabel(rowProg) + '</span>';
       tr.appendChild(statusTd);
 
       var linkTd = document.createElement("td");
@@ -1472,6 +1666,16 @@
       }
       tr.appendChild(notesTd);
 
+      var remarkTd = document.createElement("td");
+      var rowLastRemark = latestRemark(t);
+      if(rowLastRemark){
+        remarkTd.innerHTML = "<b style=\"display:block; font-size:11px; color:var(--ink-faint); margin-bottom:2px;\">" +
+          escapeHtml(rowLastRemark.by || "") + " · " + fmtAssignedDate(rowLastRemark.at) + "</b>" + escapeHtml(rowLastRemark.text);
+      } else {
+        remarkTd.textContent = "—";
+      }
+      tr.appendChild(remarkTd);
+
       var actionTd = document.createElement("td");
       actionTd.style.whiteSpace = "nowrap";
       var histBtn = document.createElement("button");
@@ -1505,6 +1709,13 @@
   document.getElementById("extensionConfirm").addEventListener("click", confirmExtension);
   document.getElementById("extensionOverlay").addEventListener("click", function(e){
     if(e.target === document.getElementById("extensionOverlay")) closeExtension();
+  });
+
+  document.getElementById("remarkClose").addEventListener("click", closeRemark);
+  document.getElementById("remarkCancel").addEventListener("click", closeRemark);
+  document.getElementById("remarkConfirm").addEventListener("click", confirmRemark);
+  document.getElementById("remarkOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("remarkOverlay")) closeRemark();
   });
 
   document.getElementById("reminderPopupClose").addEventListener("click", closeReminderPopup);
@@ -1542,7 +1753,11 @@
     state.config.managers.forEach(function(m, idx){
       var block = document.createElement("div");
       block.className = "settings-mgr";
+      var colorKey = managerColorKey(m);
       block.innerHTML =
+        '<div class="mgr-name-c ' + managerColorClass(m) + '" style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; text-transform:capitalize; margin-bottom:6px;">' +
+          '<span class="mgr-dot ' + managerColorClass(m) + '"></span>' + escapeHtml(colorKey) + ' colour' +
+        '</div>' +
         '<div class="field-row">' +
           '<div class="field"><label>Name</label><input data-idx="' + idx + '" data-k="name" value="' + escapeAttr(m.name) + '"></div>' +
           '<div class="field"><label>Region</label><input data-idx="' + idx + '" data-k="region" value="' + escapeAttr(m.region) + '"></div>' +
