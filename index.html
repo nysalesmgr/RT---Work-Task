@@ -40,6 +40,9 @@
     --mgr-blue: #4a8fe0;
     --mgr-blue-text: #1d5fac;
     --mgr-blue-soft: #dfeafd;
+    --mgr-purple: #8b5cf6;
+    --mgr-purple-text: #6d28d9;
+    --mgr-purple-soft: #ede4fe;
     --mgr-orange: #f0973d;
     --mgr-orange-text: #b5651a;
     --mgr-orange-soft: #ffe9d2;
@@ -79,6 +82,9 @@
       --mgr-blue: #7db4f0;
       --mgr-blue-text: #a9cff7;
       --mgr-blue-soft: #1c2f4a;
+      --mgr-purple: #a78bfa;
+      --mgr-purple-text: #c4b5fd;
+      --mgr-purple-soft: #302150;
       --mgr-orange: #f5a862;
       --mgr-orange-text: #f8c690;
       --mgr-orange-soft: #3d2a15;
@@ -118,6 +124,9 @@
     --mgr-blue: #7db4f0;
     --mgr-blue-text: #a9cff7;
     --mgr-blue-soft: #1c2f4a;
+    --mgr-purple: #a78bfa;
+    --mgr-purple-text: #c4b5fd;
+    --mgr-purple-soft: #302150;
     --mgr-orange: #f5a862;
     --mgr-orange-text: #f8c690;
     --mgr-orange-soft: #3d2a15;
@@ -174,18 +183,36 @@
   .mgr-progress-seg.seg-pending{ background: var(--med); }
   .mgr-progress-seg.seg-completed{ background: var(--low); }
   .mgr-progress-label{ font-size:10.5px; color: var(--ink-faint); margin-top:4px; font-family:"IBM Plex Mono", monospace; }
+
+  .mgr-page-progress{
+    background: var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:14px 16px; box-shadow: var(--shadow);
+  }
+  .mgr-page-progress .mgr-progress-bar{ height:10px; margin-top:0; }
+  .mgr-page-progress-legend{ display:flex; flex-wrap:wrap; gap:14px; margin-top:10px; }
+  .mgr-page-progress-legend .item{ display:flex; align-items:center; gap:6px; font-size:12.5px; color: var(--ink-soft); }
+  .mgr-page-progress-legend .swatch{ width:9px; height:9px; border-radius:3px; flex:none; }
+  .mgr-page-progress-legend .swatch.seg-not_started{ background: var(--ink-faint); opacity:.35; }
+  .mgr-page-progress-legend .swatch.seg-in_progress{ background: var(--accent); }
+  .mgr-page-progress-legend .swatch.seg-pending{ background: var(--med); }
+  .mgr-page-progress-legend .swatch.seg-completed{ background: var(--low); }
+  .mgr-page-progress-legend .item b{ color: var(--ink); }
   .mgr-c-pink .mgr-dot, .mgr-dot.mgr-c-pink{ background: var(--mgr-pink); }
   .mgr-c-blue .mgr-dot, .mgr-dot.mgr-c-blue{ background: var(--mgr-blue); }
   .mgr-c-orange .mgr-dot, .mgr-dot.mgr-c-orange{ background: var(--mgr-orange); }
+  .mgr-c-purple .mgr-dot, .mgr-dot.mgr-c-purple{ background: var(--mgr-purple); }
   .mgr-c-pink .mgr-name-c, .mgr-name-c.mgr-c-pink{ color: var(--mgr-pink-text); }
   .mgr-c-blue .mgr-name-c, .mgr-name-c.mgr-c-blue{ color: var(--mgr-blue-text); }
   .mgr-c-orange .mgr-name-c, .mgr-name-c.mgr-c-orange{ color: var(--mgr-orange-text); }
+  .mgr-c-purple .mgr-name-c, .mgr-name-c.mgr-c-purple{ color: var(--mgr-purple-text); }
   .mgr-chip.mgr-c-pink{ border-color: color-mix(in srgb, var(--mgr-pink) 45%, var(--border)); }
   .mgr-chip.mgr-c-blue{ border-color: color-mix(in srgb, var(--mgr-blue) 45%, var(--border)); }
   .mgr-chip.mgr-c-orange{ border-color: color-mix(in srgb, var(--mgr-orange) 45%, var(--border)); }
+  .mgr-chip.mgr-c-purple{ border-color: color-mix(in srgb, var(--mgr-purple) 45%, var(--border)); }
   .pill.manager.mgr-c-pink{ background: var(--surface); color: var(--mgr-pink-text); border:1px solid color-mix(in srgb, var(--mgr-pink) 55%, var(--border)); }
   .pill.manager.mgr-c-blue{ background: var(--surface); color: var(--mgr-blue-text); border:1px solid color-mix(in srgb, var(--mgr-blue) 55%, var(--border)); }
   .pill.manager.mgr-c-orange{ background: var(--surface); color: var(--mgr-orange-text); border:1px solid color-mix(in srgb, var(--mgr-orange) 55%, var(--border)); }
+  .pill.manager.mgr-c-purple{ background: var(--surface); color: var(--mgr-purple-text); border:1px solid color-mix(in srgb, var(--mgr-purple) 55%, var(--border)); }
 
   .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   button.btn, .btn-icon, .checkbox{ touch-action: manipulation; }
@@ -255,6 +282,7 @@
   .card.mgr-c-pink{ background: var(--mgr-pink-soft); }
   .card.mgr-c-blue{ background: var(--mgr-blue-soft); }
   .card.mgr-c-orange{ background: var(--mgr-orange-soft); }
+  .card.mgr-c-purple{ background: var(--mgr-purple-soft); }
   .card .row1{ display:flex; align-items:flex-start; gap:9px; }
   .checkbox{
     width:18px; height:18px; border-radius:5px; border:1.5px solid var(--ink-faint);
@@ -420,7 +448,8 @@
     <div class="toolbar">
       <button type="button" class="btn btn-ghost" id="mgrPageBack">← Back to board</button>
     </div>
-    <h2 id="mgrPageTitle" style="font-family:'Fraunces', serif; font-size:22px; font-weight:600; margin:4px 0 16px;">Overview</h2>
+    <h2 id="mgrPageTitle" style="font-family:'Fraunces', serif; font-size:22px; font-weight:600; margin:4px 0 10px;">Overview</h2>
+    <div id="mgrPageProgress" style="margin-bottom:18px;"></div>
     <div style="overflow:auto; border:1px solid var(--border); border-radius:12px; background:var(--surface); box-shadow:var(--shadow);">
       <table class="mgr-table">
         <thead>
@@ -652,8 +681,8 @@
     return m || null;
   }
 
-  var MANAGER_COLOR_PALETTE = ["pink", "blue", "orange"];
-  var MANAGER_COLOR_BY_ID = { m1: "pink", m2: "blue", m3: "orange" };
+  var MANAGER_COLOR_PALETTE = ["pink", "purple", "blue", "orange"];
+  var MANAGER_COLOR_BY_ID = { m1: "pink", m2: "purple", m3: "blue" };
   function managerColorKey(mgr){
     if(!mgr) return "";
     if(MANAGER_COLOR_BY_ID[mgr.id]) return MANAGER_COLOR_BY_ID[mgr.id];
@@ -1572,6 +1601,24 @@
     var pageTitleEl = document.getElementById("mgrPageTitle");
     pageTitleEl.textContent = mgr.region + " - All Task";
     pageTitleEl.className = "mgr-name-c " + managerColorClass(mgr);
+
+    var progressEl = document.getElementById("mgrPageProgress");
+    var pageStats = managerProgressStats(currentOverviewManagerId);
+    if(pageStats.total){
+      var pageSegs = PROGRESS_ORDER.concat(["completed"]).map(function(k){
+        var pct = pageStats.counts[k] / pageStats.total * 100;
+        return pct > 0 ? '<span class="mgr-progress-seg seg-' + k + '" style="width:' + pct + '%"></span>' : "";
+      }).join("");
+      var pageLegend = PROGRESS_ORDER.concat(["completed"]).map(function(k){
+        return '<span class="item"><span class="swatch seg-' + k + '"></span>' + progressLabel(k) + ': <b>' + pageStats.counts[k] + '</b></span>';
+      }).join("");
+      progressEl.innerHTML = '<div class="mgr-page-progress">' +
+        '<div class="mgr-progress-bar">' + pageSegs + '</div>' +
+        '<div class="mgr-page-progress-legend">' + pageLegend + '</div>' +
+      '</div>';
+    } else {
+      progressEl.innerHTML = "";
+    }
 
     var tasks = state.tasks.filter(function(t){ return t.managerId === currentOverviewManagerId; })
       .slice()
