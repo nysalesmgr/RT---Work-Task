@@ -32,6 +32,17 @@
 
     --done: #8891ab;
     --shadow: 0 1px 2px rgba(48,60,108,.08), 0 4px 14px rgba(48,60,108,.08);
+
+    /* Per-manager colour coding */
+    --mgr-pink: #ec6ba5;
+    --mgr-pink-text: #c22d78;
+    --mgr-pink-soft: #fce3ef;
+    --mgr-blue: #4a8fe0;
+    --mgr-blue-text: #1d5fac;
+    --mgr-blue-soft: #dfeafd;
+    --mgr-orange: #f0973d;
+    --mgr-orange-text: #b5651a;
+    --mgr-orange-soft: #ffe9d2;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
@@ -61,6 +72,16 @@
 
       --done: #7c85a3;
       --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+
+      --mgr-pink: #f0a8cb;
+      --mgr-pink-text: #f5c2dd;
+      --mgr-pink-soft: #3a1f30;
+      --mgr-blue: #7db4f0;
+      --mgr-blue-text: #a9cff7;
+      --mgr-blue-soft: #1c2f4a;
+      --mgr-orange: #f5a862;
+      --mgr-orange-text: #f8c690;
+      --mgr-orange-soft: #3d2a15;
     }
   }
   :root[data-theme="dark"]{
@@ -90,6 +111,16 @@
 
     --done: #7c85a3;
     --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+
+    --mgr-pink: #f0a8cb;
+    --mgr-pink-text: #f5c2dd;
+    --mgr-pink-soft: #3a1f30;
+    --mgr-blue: #7db4f0;
+    --mgr-blue-text: #a9cff7;
+    --mgr-blue-soft: #1c2f4a;
+    --mgr-orange: #f5a862;
+    --mgr-orange-text: #f8c690;
+    --mgr-orange-soft: #3d2a15;
   }
 
   *{ box-sizing: border-box; }
@@ -132,6 +163,19 @@
   .mgr-chip:hover{ border-color: var(--accent); }
   .mgr-dot{ width:8px; height:8px; border-radius:50%; background: var(--accent); flex:none; }
   .mgr-meta .mgr-name{ font-weight:600; font-size:16px; }
+  .mgr-name-c{ font-weight:600; font-size:16px; }
+  .mgr-c-pink .mgr-dot, .mgr-dot.mgr-c-pink{ background: var(--mgr-pink); }
+  .mgr-c-blue .mgr-dot, .mgr-dot.mgr-c-blue{ background: var(--mgr-blue); }
+  .mgr-c-orange .mgr-dot, .mgr-dot.mgr-c-orange{ background: var(--mgr-orange); }
+  .mgr-c-pink .mgr-name-c, .mgr-name-c.mgr-c-pink{ color: var(--mgr-pink-text); }
+  .mgr-c-blue .mgr-name-c, .mgr-name-c.mgr-c-blue{ color: var(--mgr-blue-text); }
+  .mgr-c-orange .mgr-name-c, .mgr-name-c.mgr-c-orange{ color: var(--mgr-orange-text); }
+  .mgr-chip.mgr-c-pink{ border-color: color-mix(in srgb, var(--mgr-pink) 45%, var(--border)); }
+  .mgr-chip.mgr-c-blue{ border-color: color-mix(in srgb, var(--mgr-blue) 45%, var(--border)); }
+  .mgr-chip.mgr-c-orange{ border-color: color-mix(in srgb, var(--mgr-orange) 45%, var(--border)); }
+  .pill.manager.mgr-c-pink{ background: var(--surface); color: var(--mgr-pink-text); border:1px solid color-mix(in srgb, var(--mgr-pink) 55%, var(--border)); }
+  .pill.manager.mgr-c-blue{ background: var(--surface); color: var(--mgr-blue-text); border:1px solid color-mix(in srgb, var(--mgr-blue) 55%, var(--border)); }
+  .pill.manager.mgr-c-orange{ background: var(--surface); color: var(--mgr-orange-text); border:1px solid color-mix(in srgb, var(--mgr-orange) 55%, var(--border)); }
 
   .toolbar{ display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
   button.btn, .btn-icon, .checkbox{ touch-action: manipulation; }
@@ -198,6 +242,9 @@
   .col.med .card{ border-left-color: var(--med); }
   .col.low .card{ border-left-color: var(--low); }
   .card.done{ opacity:.6; border-left-color: var(--border); }
+  .card.mgr-c-pink{ background: var(--mgr-pink-soft); }
+  .card.mgr-c-blue{ background: var(--mgr-blue-soft); }
+  .card.mgr-c-orange{ background: var(--mgr-orange-soft); }
   .card .row1{ display:flex; align-items:flex-start; gap:9px; }
   .checkbox{
     width:18px; height:18px; border-radius:5px; border:1.5px solid var(--ink-faint);
@@ -225,6 +272,20 @@
   .pill.pri-low{ background: var(--low); color: var(--chip-ink); font-weight:600; }
   .pill.status-done{ background: var(--low-soft); color: var(--low-text); }
   .pill.status-open{ background: var(--surface-2); color: var(--ink-soft); }
+  .pill.progress-not_started{ background: var(--surface-2); color: var(--ink-soft); }
+  .pill.progress-in_progress{ background: var(--accent-soft); color: var(--accent); font-weight:600; }
+  .pill.progress-pending{ background: var(--med-soft); color: var(--med-text); font-weight:600; }
+  .pill.progress-completed{ background: var(--low-soft); color: var(--low-text); font-weight:600; }
+  select.progress-select{
+    font: inherit; font-family:"IBM Plex Mono", monospace; font-size:11px; font-weight:600; cursor:pointer;
+    border-radius:20px; border:1px solid transparent; padding:2px 22px 2px 8px;
+    appearance:none; -webkit-appearance:none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%238891ab' d='M2.5 4.5l3.5 3 3.5-3z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position: right 6px center;
+  }
+  select.progress-select.progress-not_started{ background-color: var(--surface-2); color: var(--ink-soft); }
+  select.progress-select.progress-in_progress{ background-color: var(--accent-soft); color: var(--accent); }
+  select.progress-select.progress-pending{ background-color: var(--med-soft); color: var(--med-text); }
 
   .mgr-table{ width:100%; border-collapse:collapse; font-size:13px; }
   .mgr-table th{
@@ -234,25 +295,16 @@
   .mgr-table td{ padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; color: var(--ink); }
   .mgr-table tr:last-child td{ border-bottom:none; }
   .mgr-table tr.done td{ color: var(--ink-faint); }
-  .inline-edit{
-    font: inherit; font-size:12.5px; color: var(--ink); background: var(--surface);
-    border:1px solid var(--border); border-radius:6px; padding:5px 7px; width:100%;
-    min-width:90px; resize: vertical;
-  }
-  .inline-edit:focus{ outline:none; border-color: var(--accent); }
-  select.inline-edit{ min-width:96px; }
-  input[type="date"].inline-edit{ min-width:130px; }
-  textarea.inline-edit{ min-width:150px; font-family: inherit; }
   a.xl-link{
     font-size:12px; color: var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:5px;
     border:1px solid var(--border); padding:3px 9px; border-radius:20px; background: var(--surface-2);
   }
   a.xl-link:hover{ text-decoration:underline; }
   .card-notes{
-    font-size:12.5px; color: var(--ink-soft); background: var(--surface-2); border-radius:8px;
-    padding:8px 10px; white-space: pre-wrap; word-break: break-word;
+    font-size:13px; color: #1a1a1a; background: #ffffff; border:1px solid var(--border); border-radius:8px;
+    padding:8px 10px; white-space: pre-wrap; word-break: break-word; box-shadow: var(--shadow);
   }
-  .card-notes b{ color: var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
+  .card-notes b{ color: #1a1a1a; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
   .card-staff-actions{ display:flex; gap:8px; }
   .btn-extension{
     font: inherit; font-weight:600; font-size:12.5px; cursor:pointer;
@@ -541,7 +593,7 @@
 
   var DEFAULT_STATE = {
     staffName: "Rhea Tan",
-    staffEmail: "",
+    staffEmail: "nyenquiry@hericoll.com",
     managers: [
       { id:"m1", name:"Jonia", region:"New York",   tz:"America/New_York", email:"nysalesmgr@hericoll.com" },
       { id:"m2", name:"PK",    region:"Xian", tz:"Asia/Shanghai",    email:"pkchan@columbiainv.com" },
@@ -588,6 +640,20 @@
   function managerById(id){
     var m = state.config.managers.filter(function(x){ return x.id === id; })[0];
     return m || null;
+  }
+
+  var MANAGER_COLOR_PALETTE = ["pink", "blue", "orange"];
+  var MANAGER_COLOR_BY_ID = { m1: "pink", m2: "blue", m3: "orange" };
+  function managerColorKey(mgr){
+    if(!mgr) return "";
+    if(MANAGER_COLOR_BY_ID[mgr.id]) return MANAGER_COLOR_BY_ID[mgr.id];
+    var idx = state.config.managers.indexOf(mgr);
+    if(idx < 0) idx = 0;
+    return MANAGER_COLOR_PALETTE[idx % MANAGER_COLOR_PALETTE.length];
+  }
+  function managerColorClass(mgr){
+    var k = managerColorKey(mgr);
+    return k ? "mgr-c-" + k : "";
   }
 
   function fmtDate(iso){
@@ -644,10 +710,10 @@
     state.config.managers.forEach(function(m){
       var el = document.createElement("button");
       el.type = "button";
-      el.className = "mgr-chip";
+      el.className = "mgr-chip " + managerColorClass(m);
       el.title = "View all tasks for " + m.name;
       el.innerHTML = '<span class="mgr-dot"></span><div class="mgr-meta">' +
-        '<div class="mgr-name">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div></div>';
+        '<div class="mgr-name mgr-name-c">' + escapeHtml(m.name) + ' <span style="color:var(--ink-faint); font-weight:400;">· ' + escapeHtml(m.region) + '</span></div></div>';
       el.addEventListener("click", function(){ openManagerOverview(m.id); });
       chips.appendChild(el);
     });
@@ -764,7 +830,7 @@
     var d = daysUntil(t.deadline);
     var deadlineClass = (t.status === "done" || d === null) ? "" : (d < 0 ? "overdue" : (d <= 7 ? "soon" : ""));
     var card = document.createElement("div");
-    card.className = "card" + (t.status === "done" ? " done" : "");
+    card.className = "card" + (mgr ? " " + managerColorClass(mgr) : "") + (t.status === "done" ? " done" : "");
 
     var row1 = document.createElement("div");
     row1.className = "row1";
@@ -806,15 +872,44 @@
     card.appendChild(row1);
 
     var pendingExt = pendingExtension(t);
+    var effProg = effectiveProgress(t);
     var meta = document.createElement("div");
     meta.className = "meta-row";
     meta.innerHTML =
       '<span class="pill deadline ' + deadlineClass + '">Deadline: ' + fmtDate(t.deadline) + '</span>' +
-      (mgr ? '<span class="pill manager">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
+      (mgr ? '<span class="pill manager ' + managerColorClass(mgr) + '">PIC - ' + escapeHtml(mgr.name) + ' · ' + escapeHtml(mgr.region) + '</span>' : '') +
       ((t.recurring && t.recurring !== "none") ? '<span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') +
       (pendingExt ? '<span class="pill recurring" title="' + escapeAttr(pendingExt.reason || "") + '">⏳ Extension requested' + (pendingExt.requestedDeadline ? " → " + fmtDate(pendingExt.requestedDeadline) : "") + '</span>' : '') +
       (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Document</a>' : '');
     card.appendChild(meta);
+
+    var isStaff = getRole() === "staff";
+    if(t.status === "open" && isStaff){
+      var progressRow = document.createElement("div");
+      progressRow.className = "meta-row";
+      var progressSelect = document.createElement("select");
+      progressSelect.className = "progress-select progress-" + effProg;
+      PROGRESS_ORDER.forEach(function(key){
+        var opt = document.createElement("option");
+        opt.value = key; opt.textContent = progressLabel(key);
+        if(effProg === key) opt.selected = true;
+        progressSelect.appendChild(opt);
+      });
+      progressSelect.addEventListener("change", function(){
+        var oldVal = t.progress || "not_started";
+        t.progress = progressSelect.value;
+        if(t.progress !== oldVal) pushHistory(t, { type: "progress", value: t.progress });
+        persistTask(t);
+        render();
+      });
+      progressRow.appendChild(progressSelect);
+      card.appendChild(progressRow);
+    } else {
+      var progressPill = document.createElement("div");
+      progressPill.className = "meta-row";
+      progressPill.innerHTML = '<span class="pill progress-' + effProg + '">' + progressLabel(effProg) + '</span>';
+      card.appendChild(progressPill);
+    }
 
     if(t.notes){
       var notes = document.createElement("div");
@@ -831,7 +926,6 @@
       card.appendChild(remarkBlock);
     }
 
-    var isStaff = getRole() === "staff";
     if(isStaff){
       var actionsRow = document.createElement("div");
       actionsRow.className = "card-staff-actions";
@@ -963,6 +1057,7 @@
     if(ev.type === "extension_requested") return "Extension requested" + (ev.requestedDeadline ? " — new deadline: " + fmtDate(ev.requestedDeadline) : "") + (ev.reason ? ": " + ev.reason : "");
     if(ev.type === "extension_reviewed") return "Deadline updated to " + fmtDate(ev.newDeadline);
     if(ev.type === "remark") return (ev.by ? ev.by + ": " : "") + ev.text;
+    if(ev.type === "progress") return "Status set to " + progressLabel(ev.value);
     return ev.type;
   }
   function historyIcon(ev){
@@ -973,6 +1068,7 @@
     if(ev.type === "extension_requested") return "⏳";
     if(ev.type === "extension_reviewed") return "📅";
     if(ev.type === "remark") return "💬";
+    if(ev.type === "progress") return "🔄";
     return "•";
   }
   function latestRemark(t){
@@ -986,6 +1082,14 @@
     if(t.status !== "open" || !Array.isArray(t.history) || !t.history.length) return null;
     var last = t.history[t.history.length - 1];
     return last.type === "extension_requested" ? last : null;
+  }
+
+  var PROGRESS_LABELS = { not_started: "Not started", in_progress: "In progress", pending: "Pending", completed: "Completed" };
+  var PROGRESS_ORDER = ["not_started", "in_progress", "pending"];
+  function progressLabel(key){ return PROGRESS_LABELS[key] || PROGRESS_LABELS.not_started; }
+  function effectiveProgress(t){
+    if(t.status === "done") return "completed";
+    return (t.progress && PROGRESS_LABELS[t.progress]) ? t.progress : "not_started";
   }
   function renderHistoryList(t){
     var events = Array.isArray(t.history) ? t.history : [];
@@ -1127,6 +1231,7 @@
         recurring: t.recurring,
         managerId: t.managerId,
         status: "open",
+        progress: "not_started",
         createdAt: nextCreatedAt,
         history: [{ type:"created", at: nextCreatedAt }]
       };
@@ -1216,6 +1321,11 @@
         showEmailToast("⚠️ Couldn't delete — " + err.message);
       });
     }
+  }
+  function deleteTask(id){
+    state.tasks = state.tasks.filter(function(t){ return t.id !== id; });
+    deleteTaskRemote(id);
+    render();
   }
   function persistConfig(){
     if(configRef){
@@ -1371,7 +1481,7 @@
       }
     } else {
       var createdAt = nowIso();
-      var t = Object.assign({ id: uid(), status:"open", createdAt: createdAt, history: [{ type:"created", at: createdAt }] }, data);
+      var t = Object.assign({ id: uid(), status:"open", progress:"not_started", createdAt: createdAt, history: [{ type:"created", at: createdAt }] }, data);
       state.tasks.push(t);
       persistTask(t);
     }
@@ -1382,10 +1492,8 @@
   document.getElementById("deleteTaskBtn").addEventListener("click", function(){
     if(!state.editingTaskId) return;
     var id = state.editingTaskId;
-    state.tasks = state.tasks.filter(function(t){ return t.id !== id; });
-    deleteTaskRemote(id);
     closeTaskModal();
-    render();
+    deleteTask(id);
   });
 
   // ---------- manager overview page ----------
@@ -1428,7 +1536,9 @@
     if(!currentOverviewManagerId) return;
     var mgr = managerById(currentOverviewManagerId);
     if(!mgr){ showBoard(); return; }
-    document.getElementById("mgrPageTitle").textContent = mgr.region + " - All Task";
+    var pageTitleEl = document.getElementById("mgrPageTitle");
+    pageTitleEl.textContent = mgr.region + " - All Task";
+    pageTitleEl.className = "mgr-name-c " + managerColorClass(mgr);
 
     var tasks = state.tasks.filter(function(t){ return t.managerId === currentOverviewManagerId; })
       .slice()
@@ -1445,11 +1555,6 @@
     }
     var isStaff = getRole() === "staff";
 
-    function afterFieldEdit(t){
-      persistTask(t);
-      render();
-    }
-
     tasks.forEach(function(t, idx){
       var tr = document.createElement("tr");
       if(t.status === "done") tr.className = "done";
@@ -1460,93 +1565,28 @@
 
       var titleTd = document.createElement("td");
       var recurPillHtml = (t.recurring && t.recurring !== "none") ? ' <span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '';
-      if(isStaff){
-        titleTd.innerHTML = escapeHtml(t.title) + recurPillHtml;
-      } else {
-        var titleInput = document.createElement("input");
-        titleInput.type = "text";
-        titleInput.className = "inline-edit";
-        titleInput.value = t.title || "";
-        titleInput.addEventListener("blur", function(){
-          var v = titleInput.value.trim();
-          if(v && v !== t.title){ t.title = v; afterFieldEdit(t); }
-          else if(!v){ titleInput.value = t.title; }
-        });
-        titleTd.appendChild(titleInput);
-        if(recurPillHtml){
-          var recurSpan = document.createElement("span");
-          recurSpan.innerHTML = recurPillHtml;
-          recurSpan.style.display = "inline-block";
-          recurSpan.style.marginTop = "4px";
-          titleTd.appendChild(recurSpan);
-        }
-      }
+      titleTd.innerHTML = escapeHtml(t.title) + recurPillHtml;
       tr.appendChild(titleTd);
 
       var priTd = document.createElement("td");
-      if(isStaff){
-        priTd.innerHTML = '<span class="pill pri-' + t.priority + '">' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + '</span>';
-      } else {
-        var priSelect = document.createElement("select");
-        priSelect.className = "inline-edit";
-        ["high","medium","low"].forEach(function(p){
-          var opt = document.createElement("option");
-          opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
-          if(t.priority === p) opt.selected = true;
-          priSelect.appendChild(opt);
-        });
-        priSelect.addEventListener("change", function(){ t.priority = priSelect.value; afterFieldEdit(t); });
-        priTd.appendChild(priSelect);
-      }
+      priTd.innerHTML = '<span class="pill pri-' + t.priority + '">' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + '</span>';
       tr.appendChild(priTd);
 
       var deadlineTd = document.createElement("td");
-      if(isStaff){
-        deadlineTd.textContent = fmtDate(t.deadline);
-      } else {
-        var deadlineInput = document.createElement("input");
-        deadlineInput.type = "date";
-        deadlineInput.className = "inline-edit";
-        deadlineInput.value = t.deadline || "";
-        deadlineInput.addEventListener("change", function(){ t.deadline = deadlineInput.value; afterFieldEdit(t); });
-        deadlineTd.appendChild(deadlineInput);
-      }
+      deadlineTd.textContent = fmtDate(t.deadline);
       tr.appendChild(deadlineTd);
 
       var statusTd = document.createElement("td");
-      statusTd.innerHTML = t.status === "done" ? '<span class="pill status-done">✓ Completed</span>' : '<span class="pill status-open">Open</span>';
+      var rowProg = effectiveProgress(t);
+      statusTd.innerHTML = '<span class="pill progress-' + rowProg + '">' + progressLabel(rowProg) + '</span>';
       tr.appendChild(statusTd);
 
       var linkTd = document.createElement("td");
-      if(isStaff){
-        linkTd.innerHTML = t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—';
-      } else {
-        var linkInput = document.createElement("input");
-        linkInput.type = "text";
-        linkInput.className = "inline-edit";
-        linkInput.placeholder = "Paste link…";
-        linkInput.value = t.excelLink || "";
-        linkInput.addEventListener("blur", function(){
-          if(linkInput.value.trim() !== (t.excelLink || "")){ t.excelLink = linkInput.value.trim(); afterFieldEdit(t); }
-        });
-        linkTd.appendChild(linkInput);
-      }
+      linkTd.innerHTML = t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—';
       tr.appendChild(linkTd);
 
       var notesTd = document.createElement("td");
-      if(isStaff){
-        notesTd.textContent = t.notes || "—";
-      } else {
-        var notesInput = document.createElement("textarea");
-        notesInput.className = "inline-edit";
-        notesInput.rows = 1;
-        notesInput.placeholder = "Add a note…";
-        notesInput.value = t.notes || "";
-        notesInput.addEventListener("blur", function(){
-          if(notesInput.value.trim() !== (t.notes || "")){ t.notes = notesInput.value.trim(); afterFieldEdit(t); }
-        });
-        notesTd.appendChild(notesInput);
-      }
+      notesTd.textContent = t.notes || "—";
       tr.appendChild(notesTd);
 
       var remarkTd = document.createElement("td");
@@ -1572,6 +1612,21 @@
         throwBtn.className = "btn-icon"; throwBtn.textContent = "⤺"; throwBtn.title = "Send back for further refinement";
         throwBtn.addEventListener("click", function(){ openThrowback(t); });
         actionTd.appendChild(throwBtn);
+      }
+      if(!isStaff){
+        var editRowBtn = document.createElement("button");
+        editRowBtn.type = "button";
+        editRowBtn.className = "btn-icon"; editRowBtn.textContent = "✎"; editRowBtn.title = "Edit task";
+        editRowBtn.addEventListener("click", function(){ openTaskModal(t); });
+        actionTd.appendChild(editRowBtn);
+
+        var deleteRowBtn = document.createElement("button");
+        deleteRowBtn.type = "button";
+        deleteRowBtn.className = "btn-icon"; deleteRowBtn.textContent = "🗑"; deleteRowBtn.title = "Delete task";
+        deleteRowBtn.addEventListener("click", function(){
+          if(window.confirm('Delete "' + t.title + '"? This cannot be undone.')) deleteTask(t.id);
+        });
+        actionTd.appendChild(deleteRowBtn);
       }
       tr.appendChild(actionTd);
       body.appendChild(tr);
@@ -1636,7 +1691,11 @@
     state.config.managers.forEach(function(m, idx){
       var block = document.createElement("div");
       block.className = "settings-mgr";
+      var colorKey = managerColorKey(m);
       block.innerHTML =
+        '<div class="mgr-name-c ' + managerColorClass(m) + '" style="display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; text-transform:capitalize; margin-bottom:6px;">' +
+          '<span class="mgr-dot ' + managerColorClass(m) + '"></span>' + escapeHtml(colorKey) + ' colour' +
+        '</div>' +
         '<div class="field-row">' +
           '<div class="field"><label>Name</label><input data-idx="' + idx + '" data-k="name" value="' + escapeAttr(m.name) + '"></div>' +
           '<div class="field"><label>Region</label><input data-idx="' + idx + '" data-k="region" value="' + escapeAttr(m.region) + '"></div>' +
