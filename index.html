@@ -356,6 +356,7 @@
   }
   .card-remark{ background: var(--accent-soft); }
   .card-remark b{ color: var(--accent); }
+  .card-remark-list{ display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto; }
 
   /* ---------- modal ---------- */
   .overlay{
@@ -981,12 +982,17 @@
       card.appendChild(notes);
     }
 
-    var lastRemark = latestRemark(t);
-    if(lastRemark){
-      var remarkBlock = document.createElement("div");
-      remarkBlock.className = "card-notes card-remark";
-      remarkBlock.innerHTML = "<b>" + escapeHtml(lastRemark.by || "Remark") + "'s update — " + fmtAssignedDate(lastRemark.at) + "</b>" + escapeHtml(lastRemark.text);
-      card.appendChild(remarkBlock);
+    var remarks = allRemarks(t).slice().reverse();
+    if(remarks.length){
+      var remarkWrap = document.createElement("div");
+      remarkWrap.className = "card-remark-list";
+      remarks.forEach(function(rm){
+        var remarkBlock = document.createElement("div");
+        remarkBlock.className = "card-notes card-remark";
+        remarkBlock.innerHTML = "<b>" + escapeHtml(rm.by || "Remark") + "'s update — " + fmtAssignedDate(rm.at) + "</b>" + escapeHtml(rm.text);
+        remarkWrap.appendChild(remarkBlock);
+      });
+      card.appendChild(remarkWrap);
     }
 
     if(isStaff){
@@ -1140,6 +1146,10 @@
       if(t.history[i].type === "remark") return t.history[i];
     }
     return null;
+  }
+  function allRemarks(t){
+    if(!Array.isArray(t.history)) return [];
+    return t.history.filter(function(ev){ return ev.type === "remark"; });
   }
   function pendingExtension(t){
     if(t.status !== "open" || !Array.isArray(t.history) || !t.history.length) return null;
@@ -1681,10 +1691,14 @@
       tr.appendChild(notesTd);
 
       var remarkTd = document.createElement("td");
-      var rowLastRemark = latestRemark(t);
-      if(rowLastRemark){
-        remarkTd.innerHTML = "<b style=\"display:block; font-size:11px; color:var(--ink-faint); margin-bottom:2px;\">" +
-          escapeHtml(rowLastRemark.by || "") + " · " + fmtAssignedDate(rowLastRemark.at) + "</b>" + escapeHtml(rowLastRemark.text);
+      var rowRemarks = allRemarks(t).slice().reverse();
+      if(rowRemarks.length){
+        remarkTd.style.maxHeight = "160px";
+        remarkTd.style.overflowY = "auto";
+        remarkTd.innerHTML = rowRemarks.map(function(rm){
+          return "<div style=\"margin-bottom:6px;\"><b style=\"display:block; font-size:11px; color:var(--ink-faint); margin-bottom:2px;\">" +
+            escapeHtml(rm.by || "") + " · " + fmtAssignedDate(rm.at) + "</b>" + escapeHtml(rm.text) + "</div>";
+        }).join("");
       } else {
         remarkTd.textContent = "—";
       }
