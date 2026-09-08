@@ -234,6 +234,15 @@
   .mgr-table td{ padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:top; color: var(--ink); }
   .mgr-table tr:last-child td{ border-bottom:none; }
   .mgr-table tr.done td{ color: var(--ink-faint); }
+  .inline-edit{
+    font: inherit; font-size:12.5px; color: var(--ink); background: var(--surface);
+    border:1px solid var(--border); border-radius:6px; padding:5px 7px; width:100%;
+    min-width:90px; resize: vertical;
+  }
+  .inline-edit:focus{ outline:none; border-color: var(--accent); }
+  select.inline-edit{ min-width:96px; }
+  input[type="date"].inline-edit{ min-width:130px; }
+  textarea.inline-edit{ min-width:150px; font-family: inherit; }
   a.xl-link{
     font-size:12px; color: var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:5px;
     border:1px solid var(--border); padding:3px 9px; border-radius:20px; background: var(--surface-2);
@@ -244,6 +253,13 @@
     padding:8px 10px; white-space: pre-wrap; word-break: break-word;
   }
   .card-notes b{ color: var(--ink-faint); font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px; }
+  .btn-extension{
+    font: inherit; font-weight:600; font-size:12.5px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    background: var(--med-soft); color: var(--med-text); border:1px solid color-mix(in srgb, var(--med) 55%, var(--border));
+    border-radius:8px; padding:8px 10px; width:100%;
+  }
+  .btn-extension:hover{ filter:brightness(0.97); }
 
   /* ---------- modal ---------- */
   .overlay{
@@ -746,12 +762,6 @@
 
     var alwaysMenu = document.createElement("div");
     alwaysMenu.className = "cardmenu-always";
-    if(getRole() === "staff" && t.status === "open"){
-      var extBtn = document.createElement("button");
-      extBtn.className = "btn-icon"; extBtn.textContent = "⏳"; extBtn.title = "Request extension";
-      extBtn.addEventListener("click", function(){ openExtension(t); });
-      alwaysMenu.appendChild(extBtn);
-    }
     var histBtn = document.createElement("button");
     histBtn.className = "btn-icon"; histBtn.textContent = "🕘"; histBtn.title = "View history";
     histBtn.addEventListener("click", function(){ openHistory(t); });
@@ -790,6 +800,15 @@
       notes.className = "card-notes";
       notes.innerHTML = "<b>Manager notes</b>" + escapeHtml(t.notes);
       card.appendChild(notes);
+    }
+
+    if(getRole() === "staff" && t.status === "open" && !pendingExt){
+      var extBtn = document.createElement("button");
+      extBtn.type = "button";
+      extBtn.className = "btn-extension";
+      extBtn.innerHTML = "⏳ Request more time";
+      extBtn.addEventListener("click", function(){ openExtension(t); });
+      card.appendChild(extBtn);
     }
 
     return card;
@@ -1348,18 +1367,111 @@
       return;
     }
     var isStaff = getRole() === "staff";
+
+    function afterFieldEdit(t){
+      persistTask(t);
+      render();
+    }
+
     tasks.forEach(function(t, idx){
       var tr = document.createElement("tr");
       if(t.status === "done") tr.className = "done";
+
       tr.innerHTML =
         '<td>' + (idx + 1) + '</td>' +
-        '<td>' + fmtAssignedDate(t.createdAt) + '</td>' +
-        '<td>' + escapeHtml(t.title) + (t.recurring !== "none" ? ' <span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '') + '</td>' +
-        '<td><span class="pill pri-' + t.priority + '">' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + '</span></td>' +
-        '<td>' + fmtDate(t.deadline) + '</td>' +
-        '<td>' + (t.status === "done" ? '<span class="pill status-done">✓ Completed</span>' : '<span class="pill status-open">Open</span>') + '</td>' +
-        '<td>' + (t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—') + '</td>' +
-        '<td>' + (t.notes ? escapeHtml(t.notes) : '—') + '</td>';
+        '<td>' + fmtAssignedDate(t.createdAt) + '</td>';
+
+      var titleTd = document.createElement("td");
+      var recurPillHtml = (t.recurring && t.recurring !== "none") ? ' <span class="pill recurring">↻ ' + recurLabel(t.recurring) + '</span>' : '';
+      if(isStaff){
+        titleTd.innerHTML = escapeHtml(t.title) + recurPillHtml;
+      } else {
+        var titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.className = "inline-edit";
+        titleInput.value = t.title || "";
+        titleInput.addEventListener("blur", function(){
+          var v = titleInput.value.trim();
+          if(v && v !== t.title){ t.title = v; afterFieldEdit(t); }
+          else if(!v){ titleInput.value = t.title; }
+        });
+        titleTd.appendChild(titleInput);
+        if(recurPillHtml){
+          var recurSpan = document.createElement("span");
+          recurSpan.innerHTML = recurPillHtml;
+          recurSpan.style.display = "inline-block";
+          recurSpan.style.marginTop = "4px";
+          titleTd.appendChild(recurSpan);
+        }
+      }
+      tr.appendChild(titleTd);
+
+      var priTd = document.createElement("td");
+      if(isStaff){
+        priTd.innerHTML = '<span class="pill pri-' + t.priority + '">' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + '</span>';
+      } else {
+        var priSelect = document.createElement("select");
+        priSelect.className = "inline-edit";
+        ["high","medium","low"].forEach(function(p){
+          var opt = document.createElement("option");
+          opt.value = p; opt.textContent = p.charAt(0).toUpperCase() + p.slice(1);
+          if(t.priority === p) opt.selected = true;
+          priSelect.appendChild(opt);
+        });
+        priSelect.addEventListener("change", function(){ t.priority = priSelect.value; afterFieldEdit(t); });
+        priTd.appendChild(priSelect);
+      }
+      tr.appendChild(priTd);
+
+      var deadlineTd = document.createElement("td");
+      if(isStaff){
+        deadlineTd.textContent = fmtDate(t.deadline);
+      } else {
+        var deadlineInput = document.createElement("input");
+        deadlineInput.type = "date";
+        deadlineInput.className = "inline-edit";
+        deadlineInput.value = t.deadline || "";
+        deadlineInput.addEventListener("change", function(){ t.deadline = deadlineInput.value; afterFieldEdit(t); });
+        deadlineTd.appendChild(deadlineInput);
+      }
+      tr.appendChild(deadlineTd);
+
+      var statusTd = document.createElement("td");
+      statusTd.innerHTML = t.status === "done" ? '<span class="pill status-done">✓ Completed</span>' : '<span class="pill status-open">Open</span>';
+      tr.appendChild(statusTd);
+
+      var linkTd = document.createElement("td");
+      if(isStaff){
+        linkTd.innerHTML = t.excelLink ? '<a class="xl-link" href="' + escapeAttr(t.excelLink) + '" target="_blank" rel="noopener">▤ Open</a>' : '—';
+      } else {
+        var linkInput = document.createElement("input");
+        linkInput.type = "text";
+        linkInput.className = "inline-edit";
+        linkInput.placeholder = "Paste link…";
+        linkInput.value = t.excelLink || "";
+        linkInput.addEventListener("blur", function(){
+          if(linkInput.value.trim() !== (t.excelLink || "")){ t.excelLink = linkInput.value.trim(); afterFieldEdit(t); }
+        });
+        linkTd.appendChild(linkInput);
+      }
+      tr.appendChild(linkTd);
+
+      var notesTd = document.createElement("td");
+      if(isStaff){
+        notesTd.textContent = t.notes || "—";
+      } else {
+        var notesInput = document.createElement("textarea");
+        notesInput.className = "inline-edit";
+        notesInput.rows = 1;
+        notesInput.placeholder = "Add a note…";
+        notesInput.value = t.notes || "";
+        notesInput.addEventListener("blur", function(){
+          if(notesInput.value.trim() !== (t.notes || "")){ t.notes = notesInput.value.trim(); afterFieldEdit(t); }
+        });
+        notesTd.appendChild(notesInput);
+      }
+      tr.appendChild(notesTd);
+
       var actionTd = document.createElement("td");
       actionTd.style.whiteSpace = "nowrap";
       var histBtn = document.createElement("button");
