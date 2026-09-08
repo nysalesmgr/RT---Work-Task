@@ -316,8 +316,8 @@
       <div class="spacer"></div>
     </div>
 
-    <div class="banner" id="reminderBanner" style="display:none;">
-      <div class="flag">⏰</div>
+    <div class="banner" id="reminderBanner">
+      <div class="flag" id="bannerFlag">⏰</div>
       <div class="body">
         <div class="headline" id="bannerHeadline"></div>
         <ul id="bannerList"></ul>
@@ -558,15 +558,21 @@
     var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0; });
     var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 7; });
     var banner = document.getElementById("reminderBanner");
+    var flag = document.getElementById("bannerFlag");
     var headline = document.getElementById("bannerHeadline");
     var list = document.getElementById("bannerList");
 
-    if(overdue.length === 0 && soon.length === 0){
-      banner.style.display = "none";
-      return;
-    }
     banner.style.display = "flex";
     banner.classList.toggle("has-overdue", overdue.length > 0);
+
+    if(overdue.length === 0 && soon.length === 0){
+      flag.textContent = "✅";
+      headline.textContent = "All caught up — nothing overdue or due within 7 days";
+      list.innerHTML = "";
+      return;
+    }
+
+    flag.textContent = "⏰";
     var parts = [];
     if(overdue.length) parts.push(overdue.length + " overdue");
     if(soon.length) parts.push(soon.length + " due within 7 days");
@@ -577,7 +583,7 @@
       var d = daysUntil(t.deadline);
       var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
       var mgr = managerById(t.managerId);
-      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.name) : "unassigned") + "</span></li>";
+      return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.region) : "unassigned") + "</span></li>";
     }).join("");
   }
 
