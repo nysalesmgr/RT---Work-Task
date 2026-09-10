@@ -391,6 +391,14 @@
 
   .settings-grid{ display:flex; flex-direction:column; gap:12px; }
   .settings-mgr{ border:1px solid var(--border); border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:8px; }
+  .pin-field-wrap{ position:relative; display:flex; }
+  .pin-field-wrap input{ flex:1; padding-right:36px !important; }
+  .pin-toggle-btn{
+    position:absolute; right:4px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; font-size:14px; padding:4px 6px;
+    color: var(--ink-faint); border-radius:6px; line-height:1;
+  }
+  .pin-toggle-btn:hover{ background: var(--surface-2); color: var(--ink); }
   .settings-mgr .field-row .field{ min-width:0; }
 
   footer.note{
@@ -576,6 +584,25 @@
     <div class="modal-actions">
       <button type="button" class="btn btn-ghost" id="remarkCancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="remarkConfirm">Add remark</button>
+    </div>
+  </div>
+</div>
+
+<div id="pinOverlay" class="overlay" style="display:none;">
+  <div class="modal" style="max-width:360px;">
+    <button type="button" class="btn-icon modal-close" id="pinClose">✕</button>
+    <h3>Enter PIN</h3>
+    <div class="field">
+      <label id="pinLabel">This manager's tasks are PIN-protected</label>
+      <div class="pin-field-wrap">
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="12" placeholder="Enter PIN" autocomplete="off">
+        <button type="button" class="pin-toggle-btn" id="pinToggle" title="Show PIN" aria-label="Show PIN">👁</button>
+      </div>
+      <div id="pinError" style="display:none; color: var(--high-text); font-size:12px;">Incorrect PIN — try again.</div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" id="pinCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="pinConfirm">Continue</button>
     </div>
   </div>
 </div>
@@ -792,14 +819,25 @@
 
   function getOverdueAndSoon(){
     var open = state.tasks.filter(function(t){ return t.status === "open"; });
-    var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0; });
-    var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 7; });
-    return { overdue: overdue, soon: soon };
+    // Daily recurring tasks always need same-day attention, so they get their own
+    // bucket and always show in the reminder — regardless of what the deadline
+    // math says — instead of only when they happen to fall within the 7-day window.
+    var overdue = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d < 0 && t.recurring !== "daily"; });
+    var soon = open.filter(function(t){ var d = daysUntil(t.deadline); return d !== null && d >= 0 && d <= 7 && t.recurring !== "daily"; });
+    var daily = open.filter(function(t){ return t.recurring === "daily"; });
+    return { overdue: overdue, soon: soon, daily: daily };
   }
   function reminderListItemsHtml(items){
     return items.map(function(t){
       var d = daysUntil(t.deadline);
-      var tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
+      var tag;
+      if(t.recurring === "daily"){
+        tag = (d !== null && d < 0)
+          ? '<span class="tag overdue">Daily · ' + Math.abs(d) + 'd overdue</span>'
+          : '<span class="tag soon">Daily</span>';
+      } else {
+        tag = d < 0 ? '<span class="tag overdue">' + Math.abs(d) + 'd overdue</span>' : '<span class="tag soon">' + (d === 0 ? "due today" : "in " + d + "d") + '</span>';
+      }
       var mgr = managerById(t.managerId);
       return "<li>" + tag + " <b>" + escapeHtml(t.title) + "</b> <span>— " + (mgr ? escapeHtml(mgr.region) : "unassigned") + "</span></li>";
     }).join("");
@@ -814,15 +852,16 @@
     var r = getOverdueAndSoon();
     var headline = document.getElementById("reminderPopupHeadline");
     var list = document.getElementById("reminderPopupList");
-    if(r.overdue.length === 0 && r.soon.length === 0){
+    if(r.overdue.length === 0 && r.soon.length === 0 && r.daily.length === 0){
       headline.textContent = "✅ All caught up";
-      list.innerHTML = '<li style="color:var(--ink-faint);">Nothing overdue or due within 7 days.</li>';
+      list.innerHTML = '<li style="color:var(--ink-faint);">Nothing overdue, due within 7 days, or daily.</li>';
     } else {
       var parts = [];
       if(r.overdue.length) parts.push(r.overdue.length + " overdue");
       if(r.soon.length) parts.push(r.soon.length + " due within 7 days");
+      if(r.daily.length) parts.push(r.daily.length + " daily");
       headline.textContent = "⏰ Reminder — " + parts.join(" · ");
-      list.innerHTML = reminderListItemsHtml(r.overdue.concat(r.soon).slice(0, 8));
+      list.innerHTML = reminderListItemsHtml(r.overdue.concat(r.daily).concat(r.soon).slice(0, 10));
     }
     document.getElementById("reminderPopupOverlay").style.display = "flex";
   }
@@ -832,7 +871,7 @@
 
   function renderBanner(){
     var r = getOverdueAndSoon();
-    var overdue = r.overdue, soon = r.soon;
+    var overdue = r.overdue, soon = r.soon, daily = r.daily;
     var banner = document.getElementById("reminderBanner");
     var flag = document.getElementById("bannerFlag");
     var headline = document.getElementById("bannerHeadline");
@@ -841,9 +880,9 @@
     banner.style.display = "flex";
     banner.classList.toggle("has-overdue", overdue.length > 0);
 
-    if(overdue.length === 0 && soon.length === 0){
+    if(overdue.length === 0 && soon.length === 0 && daily.length === 0){
       flag.textContent = "✅";
-      headline.textContent = "All caught up — nothing overdue or due within 7 days";
+      headline.textContent = "All caught up — nothing overdue, due within 7 days, or daily";
       list.innerHTML = "";
       return;
     }
@@ -852,9 +891,10 @@
     var parts = [];
     if(overdue.length) parts.push(overdue.length + " overdue");
     if(soon.length) parts.push(soon.length + " due within 7 days");
+    if(daily.length) parts.push(daily.length + " daily");
     headline.textContent = "Reminder — " + parts.join(" · ");
 
-    list.innerHTML = reminderListItemsHtml(overdue.concat(soon).slice(0, 8));
+    list.innerHTML = reminderListItemsHtml(overdue.concat(daily).concat(soon).slice(0, 10));
   }
 
   function renderBoard(){
@@ -924,12 +964,12 @@
     if(t.status === "done"){
       var throwBtn = document.createElement("button");
       throwBtn.className = "btn-icon"; throwBtn.textContent = "⤺"; throwBtn.title = "Send back for further refinement";
-      throwBtn.addEventListener("click", function(){ openThrowback(t); });
+      throwBtn.addEventListener("click", function(){ requirePin(mgr, function(){ openThrowback(t); }); });
       menu.appendChild(throwBtn);
     }
     var editBtn = document.createElement("button");
     editBtn.className = "btn-icon"; editBtn.textContent = "✎"; editBtn.title = "Edit task";
-    editBtn.addEventListener("click", function(){ openTaskModal(t); });
+    editBtn.addEventListener("click", function(){ requirePin(mgr, function(){ openTaskModal(t); }); });
     menu.appendChild(editBtn);
     row1.appendChild(menu);
 
@@ -1267,6 +1307,59 @@
     showEmailToast("Remark added");
   }
 
+  // ---------- PIN protection ----------
+  // Gates edit/delete/send-back on a task to whoever knows that task's assigned
+  // manager's PIN, so one manager can't accidentally (or otherwise) modify another
+  // manager's tasks. If a manager hasn't set a PIN, their tasks stay unrestricted.
+  var pinPendingCallback = null;
+  function requirePin(mgr, onSuccess){
+    if(!mgr || !mgr.pin){ onSuccess(); return; }
+    pinPendingCallback = onSuccess;
+    document.getElementById("pinLabel").textContent = "Enter " + mgr.name + "'s PIN to continue";
+    document.getElementById("pinInput").value = "";
+    document.getElementById("pinInput").type = "password";
+    document.getElementById("pinToggle").textContent = "👁";
+    document.getElementById("pinToggle").title = "Show PIN";
+    document.getElementById("pinError").style.display = "none";
+    document.getElementById("pinOverlay").dataset.mgrId = mgr.id;
+    document.getElementById("pinOverlay").style.display = "flex";
+    document.getElementById("pinInput").focus();
+  }
+  function closePin(){
+    document.getElementById("pinOverlay").style.display = "none";
+    pinPendingCallback = null;
+  }
+  function confirmPin(){
+    var mgrId = document.getElementById("pinOverlay").dataset.mgrId;
+    var mgr = managerById(mgrId);
+    var entered = document.getElementById("pinInput").value.trim();
+    if(!mgr || !pinPendingCallback){ closePin(); return; }
+    if(entered !== mgr.pin){
+      document.getElementById("pinError").style.display = "block";
+      document.getElementById("pinInput").focus();
+      document.getElementById("pinInput").select();
+      return;
+    }
+    var cb = pinPendingCallback;
+    closePin();
+    cb();
+  }
+  document.getElementById("pinClose").addEventListener("click", closePin);
+  document.getElementById("pinCancel").addEventListener("click", closePin);
+  document.getElementById("pinConfirm").addEventListener("click", confirmPin);
+  document.getElementById("pinInput").addEventListener("keydown", function(e){ if(e.key === "Enter") confirmPin(); });
+  document.getElementById("pinToggle").addEventListener("click", function(){
+    var input = document.getElementById("pinInput");
+    var showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    this.textContent = showing ? "👁" : "🙈";
+    this.title = showing ? "Show PIN" : "Hide PIN";
+    input.focus();
+  });
+  document.getElementById("pinOverlay").addEventListener("click", function(e){
+    if(e.target === document.getElementById("pinOverlay")) closePin();
+  });
+
   // ---------- actions ----------
   function toggleComplete(t){
     if(t.status === "done"){
@@ -1511,6 +1604,7 @@
   // ---------- task modal ----------
   var taskModalOverlay = document.getElementById("taskModalOverlay");
   function openTaskModal(task){
+    taskSaveInFlight = false;
     state.editingTaskId = task ? task.id : null;
     document.getElementById("taskModalTitle").textContent = task ? "Edit task" : "New task";
     document.getElementById("f-title").value = task ? task.title : "";
@@ -1538,10 +1632,15 @@
   document.getElementById("taskCancelBtn").addEventListener("click", closeTaskModal);
   taskModalOverlay.addEventListener("click", function(e){ if(e.target === taskModalOverlay) closeTaskModal(); });
 
+  var taskSaveInFlight = false;
   document.getElementById("taskSaveBtn").addEventListener("click", function(){
+    // Guard against double-clicks creating two identical tasks — there's a brief
+    // window before the modal actually closes where a second click can still land.
+    if(taskSaveInFlight) return;
+    taskSaveInFlight = true;
     var title = document.getElementById("f-title").value.trim();
-    if(!title){ document.getElementById("f-title").focus(); return; }
-    if(!document.getElementById("f-manager").value){ document.getElementById("f-manager").focus(); return; }
+    if(!title){ taskSaveInFlight = false; document.getElementById("f-title").focus(); return; }
+    if(!document.getElementById("f-manager").value){ taskSaveInFlight = false; document.getElementById("f-manager").focus(); return; }
     var deadline = document.getElementById("f-deadline").value;
     var data = {
       title: title,
@@ -1568,6 +1667,7 @@
       state.tasks.push(t);
       persistTask(t);
     }
+    taskSaveInFlight = false;
     closeTaskModal();
     render();
   });
@@ -1715,21 +1815,23 @@
         var throwBtn = document.createElement("button");
         throwBtn.type = "button";
         throwBtn.className = "btn-icon"; throwBtn.textContent = "⤺"; throwBtn.title = "Send back for further refinement";
-        throwBtn.addEventListener("click", function(){ openThrowback(t); });
+        throwBtn.addEventListener("click", function(){ requirePin(mgr, function(){ openThrowback(t); }); });
         actionTd.appendChild(throwBtn);
       }
       if(!isStaff){
         var editRowBtn = document.createElement("button");
         editRowBtn.type = "button";
         editRowBtn.className = "btn-icon"; editRowBtn.textContent = "✎"; editRowBtn.title = "Edit task";
-        editRowBtn.addEventListener("click", function(){ openTaskModal(t); });
+        editRowBtn.addEventListener("click", function(){ requirePin(mgr, function(){ openTaskModal(t); }); });
         actionTd.appendChild(editRowBtn);
 
         var deleteRowBtn = document.createElement("button");
         deleteRowBtn.type = "button";
         deleteRowBtn.className = "btn-icon"; deleteRowBtn.textContent = "🗑"; deleteRowBtn.title = "Delete task";
         deleteRowBtn.addEventListener("click", function(){
-          if(window.confirm('Delete "' + t.title + '"? This cannot be undone.')) deleteTask(t.id);
+          requirePin(mgr, function(){
+            if(window.confirm('Delete "' + t.title + '"? This cannot be undone.')) deleteTask(t.id);
+          });
         });
         actionTd.appendChild(deleteRowBtn);
       }
@@ -1807,6 +1909,19 @@
         '</div>' +
         '<div class="field">' +
           '<label>Email(s) — comma-separated for multiple</label><input data-idx="' + idx + '" data-k="email" placeholder="name@company.com, name2@company.com" value="' + escapeAttr(m.email) + '">' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>Edit PIN — required from anyone editing/deleting this manager\'s tasks. ' +
+            (m.pin ? '<span style="color:var(--low-text); font-weight:600;">PIN is set.</span> Enter the current PIN to change or remove it.' : '<span style="color:var(--ink-faint); font-weight:600;">No PIN set.</span> Type one to require it.') +
+          '</label>' +
+          '<div class="pin-field-wrap">' +
+            '<input data-idx="' + idx + '" data-k="pin" type="password" inputmode="numeric" maxlength="12" placeholder="' + (m.pin ? "•••• (locked)" : "e.g. 1234") + '" autocomplete="new-password" value=""' + (m.pin ? ' disabled' : '') + '>' +
+            '<button type="button" class="pin-toggle-btn" data-toggle-for-idx="' + idx + '" title="Show PIN" aria-label="Show PIN">👁</button>' +
+          '</div>' +
+          (m.pin ? '<div style="display:flex; gap:8px; margin-top:4px;">' +
+            '<button type="button" class="btn btn-ghost pin-unlock-btn" data-idx="' + idx + '" style="font-size:12px; padding:5px 10px;">Change PIN</button>' +
+            '<button type="button" class="btn btn-ghost pin-clear-btn" data-idx="' + idx + '" style="font-size:12px; padding:5px 10px; color:var(--high-text);">Remove PIN</button>' +
+          '</div>' : '') +
         '</div>';
       grid.appendChild(block);
     });
@@ -1822,11 +1937,60 @@
     inputs.forEach(function(inp){
       var idx = Number(inp.getAttribute("data-idx"));
       var k = inp.getAttribute("data-k");
-      if(state.config.managers[idx]) state.config.managers[idx][k] = inp.value.trim();
+      if(!state.config.managers[idx]) return;
+      // PIN field starts blank on every open (the real value is never re-displayed) —
+      // a blank submit means "leave it as-is", not "clear it". Use the Remove PIN
+      // button to actually clear one.
+      if(k === "pin" && !inp.value.trim()) return;
+      state.config.managers[idx][k] = inp.value.trim();
     });
     persistConfig();
     settingsOverlay.style.display = "none";
     render();
+  });
+
+  document.getElementById("settingsManagers").addEventListener("click", function(e){
+    var clearBtn = e.target.closest(".pin-clear-btn");
+    if(clearBtn){
+      var clearIdx = Number(clearBtn.getAttribute("data-idx"));
+      var clearMgr = state.config.managers[clearIdx];
+      if(clearMgr){
+        requirePin(clearMgr, function(){
+          clearMgr.pin = "";
+          persistConfig();
+          openSettings();
+        });
+      }
+      return;
+    }
+    var unlockBtn = e.target.closest(".pin-unlock-btn");
+    if(unlockBtn){
+      var unlockIdx = Number(unlockBtn.getAttribute("data-idx"));
+      var unlockMgr = state.config.managers[unlockIdx];
+      if(unlockMgr){
+        requirePin(unlockMgr, function(){
+          var input = unlockBtn.closest(".field").querySelector('input[data-k="pin"]');
+          if(input){
+            input.disabled = false;
+            input.placeholder = "Enter new PIN";
+            input.focus();
+          }
+        });
+      }
+      return;
+    }
+  });
+
+  document.getElementById("settingsManagers").addEventListener("click", function(e){
+    var toggleBtn = e.target.closest("[data-toggle-for-idx]");
+    if(!toggleBtn) return;
+    var input = toggleBtn.parentElement.querySelector('input[data-k="pin"]');
+    if(!input) return;
+    var showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    toggleBtn.textContent = showing ? "👁" : "🙈";
+    toggleBtn.title = showing ? "Show PIN" : "Hide PIN";
+    input.focus();
   });
 
   document.getElementById("showDoneToggle").addEventListener("change", function(){
