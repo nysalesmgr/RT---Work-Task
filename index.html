@@ -7,9 +7,9 @@
     --surface: #ffffff;
     --surface-2: #eaeef6;
     --border: #d9dfec;
-    --ink: #232c4a;
-    --ink-soft: #5b6580;
-    --ink-faint: #8891ab;
+    --ink: #0a0a0a;
+    --ink-soft: #1f1f1f;
+    --ink-faint: #3d3d3d;
     --accent: #303c6c;
     --accent-ink: #ffffff;
     --accent-soft: #e1e6f2;
@@ -54,8 +54,8 @@
       --surface-2: #232a45;
       --border: #333c5c;
       --ink: #e7ebf5;
-      --ink-soft: #aab2cc;
-      --ink-faint: #7c85a3;
+      --ink-soft: #d5dbee;
+      --ink-faint: #b3bbd4;
       --accent: #b4d5db;
       --accent-ink: #12162a;
       --accent-soft: #24344a;
@@ -96,8 +96,8 @@
     --surface-2: #232a45;
     --border: #333c5c;
     --ink: #e7ebf5;
-    --ink-soft: #aab2cc;
-    --ink-faint: #7c85a3;
+    --ink-soft: #d5dbee;
+    --ink-faint: #b3bbd4;
     --accent: #b4d5db;
     --accent-ink: #12162a;
     --accent-soft: #24344a;
@@ -238,7 +238,9 @@
   }
   .schedule-head{ display:flex; flex-wrap:wrap; gap:8px; align-items:baseline; margin-bottom:10px; }
   .schedule-head .title{ font-weight:600; font-size:14px; }
-  .schedule-head .sub{ font-size:12px; color: var(--ink-faint); font-family:"IBM Plex Mono", monospace; }
+  .schedule-head .sub{ font-size:12px; color:#000; font-weight:500; font-family:"IBM Plex Mono", monospace; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .schedule-head .sub{ color:#fff; } }
+  :root[data-theme="dark"] .schedule-head .sub{ color:#fff; }
   .schedule-blocks{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
   .sched-block{
     border-radius:10px; border:1px solid var(--border); padding:10px 12px; background: var(--surface-2);
