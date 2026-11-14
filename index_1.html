@@ -230,6 +230,36 @@
   .spacer{ flex:1; }
   .staff-view #newTaskBtn, .staff-view #settingsBtn, .staff-view .cardmenu{ display:none !important; }
 
+
+  /* ---------- daily schedule strip ---------- */
+  .schedule{
+    border-radius:12px; border:1px solid var(--border); background: var(--surface);
+    box-shadow: var(--shadow); padding:14px 18px; margin-bottom:20px;
+  }
+  .schedule-head{ display:flex; flex-wrap:wrap; gap:8px; align-items:baseline; margin-bottom:10px; }
+  .schedule-head .title{ font-weight:600; font-size:14px; }
+  .schedule-head .sub{ font-size:12px; color:#000; font-weight:500; font-family:"IBM Plex Mono", monospace; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .schedule-head .sub{ color:#fff; } }
+  :root[data-theme="dark"] .schedule-head .sub{ color:#fff; }
+  .schedule-blocks{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
+  .sched-block{
+    border-radius:10px; border:1px solid var(--border); padding:10px 12px; background: var(--surface-2);
+    position:relative;
+  }
+  .sched-block.sg{ background: var(--mgr-blue-soft); border-color: color-mix(in srgb, var(--mgr-blue) 45%, var(--border)); }
+  .sched-block.ny{ background: var(--mgr-pink-soft); border-color: color-mix(in srgb, var(--mgr-pink) 45%, var(--border)); }
+  .sched-block .time{ font-family:"IBM Plex Mono", monospace; font-size:12px; font-weight:500; color: var(--ink-soft); }
+  .sched-block .region{ font-weight:600; font-size:13.5px; margin:2px 0 4px; }
+  .sched-block.sg .region{ color: var(--mgr-blue-text); }
+  .sched-block.ny .region{ color: var(--mgr-pink-text); }
+  .sched-block .what{ font-size:12.5px; color: var(--ink-soft); line-height:1.45; }
+  .sched-block.now{ outline:2px solid var(--accent); outline-offset:1px; }
+  .sched-block .nowtag{
+    display:none; position:absolute; top:8px; right:10px; font-size:10.5px; font-weight:600;
+    background: var(--accent); color: var(--accent-ink); padding:1px 7px; border-radius:999px;
+  }
+  .sched-block.now .nowtag{ display:inline-block; }
+
   /* ---------- reminder banner ---------- */
   .banner{
     border-radius:12px; border:1px solid var(--border); background: var(--surface);
@@ -427,6 +457,33 @@
         <input type="checkbox" id="showDoneToggle">Show completed
       </label>
       <div class="spacer"></div>
+    </div>
+
+    <div class="schedule" id="scheduleStrip">
+      <div class="schedule-head">
+        <span class="title">🗓 Rhea's daily schedule</span>
+        <span class="sub" id="scheduleSub">Working hours 8:30am – 6:30pm · Singapore time</span>
+      </div>
+      <div class="schedule-blocks">
+        <div class="sched-block sg" data-start="510" data-end="600">
+          <span class="nowtag">Now</span>
+          <div class="time">8:30am – 10:00am</div>
+          <div class="region">SG · XHS</div>
+          <div class="what">Reply to emails and WeChat on collaborations.</div>
+        </div>
+        <div class="sched-block ny" data-start="600" data-end="840">
+          <span class="nowtag">Now</span>
+          <div class="time">10:00am – 2:00pm</div>
+          <div class="region">New York &amp; Boston</div>
+          <div class="what">Emails and product knowledge.</div>
+        </div>
+        <div class="sched-block sg" data-start="840" data-end="1110">
+          <span class="nowtag">Now</span>
+          <div class="time">2:00pm – 6:30pm</div>
+          <div class="region">SG · XHS</div>
+          <div class="what">Reply to emails and WeChat on collaborations, and find influencers.</div>
+        </div>
+      </div>
     </div>
 
     <div class="banner" id="reminderBanner">
@@ -779,6 +836,25 @@
     document.body.classList.toggle("staff-view", getRole() === "staff");
   }
 
+  function renderSchedule(){
+    var parts;
+    try{
+      parts = new Intl.DateTimeFormat("en-GB", { timeZone:"Asia/Singapore", hour:"2-digit", minute:"2-digit", hour12:false, weekday:"short" }).formatToParts(new Date());
+    }catch(e){ return; }
+    var get = function(t){ var x = parts.filter(function(p){ return p.type === t; })[0]; return x ? x.value : ""; };
+    var mins = (parseInt(get("hour"), 10) % 24) * 60 + parseInt(get("minute"), 10);
+    var weekend = get("weekday") === "Sat" || get("weekday") === "Sun";
+    var blocks = document.querySelectorAll("#scheduleStrip .sched-block");
+    for(var i = 0; i < blocks.length; i++){
+      var b = blocks[i];
+      var on = !weekend && mins >= +b.getAttribute("data-start") && mins < +b.getAttribute("data-end");
+      b.classList.toggle("now", on);
+    }
+    var sub = document.getElementById("scheduleSub");
+    if(sub) sub.textContent = "Working hours 8:30am – 6:30pm · Singapore time" + (weekend ? " · off today" : "");
+  }
+  setInterval(renderSchedule, 60000);
+
   function render(){
     document.getElementById("staffHeading").textContent = "Rhea's Workload Overview";
     applyRole();
@@ -812,6 +888,7 @@
     renderManagerOverview();
 
     renderBanner();
+    renderSchedule();
     renderBoard();
 
     if(dataLoadedOnce) maybeShowReminderPopup();
