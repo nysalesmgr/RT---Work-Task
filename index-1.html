@@ -238,7 +238,9 @@
   }
   .schedule-head{ display:flex; flex-wrap:wrap; gap:8px; align-items:baseline; margin-bottom:10px; }
   .schedule-head .title{ font-weight:600; font-size:14px; }
-  .schedule-head .sub{ font-size:12px; color: var(--ink-faint); font-family:"IBM Plex Mono", monospace; }
+  .schedule-head .sub{ font-size:12px; color:#000; font-weight:500; font-family:"IBM Plex Mono", monospace; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .schedule-head .sub{ color:#fff; } }
+  :root[data-theme="dark"] .schedule-head .sub{ color:#fff; }
   .schedule-blocks{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; }
   .sched-block{
     border-radius:10px; border:1px solid var(--border); padding:10px 12px; background: var(--surface-2);
